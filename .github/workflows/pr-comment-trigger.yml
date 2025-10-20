@@ -1,0 +1,246 @@
+name: PR Comment Trigger
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-and-run:
+    # Only run on pull request comments
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check for /rerun command and permissions
+      id: check
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const issue = context.issue;
+          const username = context.payload.comment.user.login;
+          const commentBody = context.payload.comment.body.trim();
+          
+          // Check if comment contains /rerun command
+          const rerunRegex = /^\/rerun(\s|$)/m;
+          if (!rerunRegex.test(commentBody)) {
+            console.log('Comment does not contain /rerun command');
+            core.setOutput('should_run', 'false');
+            core.setOutput('reason', 'No /rerun command found');
+            return;
+          }
+
+          // Check user permissions
+          try {
+            const permissionLevel = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: issue.owner,
+              repo: issue.repo,
+              username: username,
+            });
+
+            const allowedPermissions = ['admin', 'write'];
+            if (allowedPermissions.includes(permissionLevel.data.permission)) {
+              console.log(`User ${username} with permission ${permissionLevel.data.permission} has access to trigger analysis`);
+              core.setOutput('should_run', 'true');
+              core.setOutput('reason', 'Permission granted');
+            } else {
+              console.log(`User ${username} with permission ${permissionLevel.data.permission} does not have access to trigger analysis`);
+              core.setOutput('should_run', 'false');
+              core.setOutput('reason', 'Insufficient permissions');
+            }
+          } catch (error) {
+            console.log(`Error checking permissions for ${username}: ${error.message}`);
+            core.setOutput('should_run', 'false');
+            core.setOutput('reason', 'Permission check failed');
+          }
+    
+    - name: Log check result
+      run: |
+        echo "Should run: ${{ steps.check.outputs.should_run }}"
+        echo "Reason: ${{ steps.check.outputs.reason }}"
+    
+    - name: Add reaction to comment
+      if: steps.check.outputs.should_run == 'true'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          await github.rest.reactions.createForIssueComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: context.payload.comment.id,
+            content: 'rocket'
+          });
+
+    - name: Checkout repository
+      if: steps.check.outputs.should_run == 'true'
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      if: steps.check.outputs.should_run == 'true'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      if: steps.check.outputs.should_run == 'true'
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Kubernetes release analysis
+      if: steps.check.outputs.should_run == 'true'
+      id: analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        QIANFAN_TOKEN: ${{ secrets.QIANFAN_TOKEN }}
+        RULIU_ACCESS_TOKEN: ${{ secrets.RULIU_ACCESS_TOKEN }}
+        RULIU_TARGET_IDS: ${{ secrets.RULIU_TARGET_IDS }}
+      run: |
+        echo "🚀 Running Kubernetes release analysis with prerelease support..."
+        mkdir -p reports
+        python main.py analyze --include-prerelease
+        echo "analysis_status=success" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
+    - name: Get latest report info
+      if: steps.check.outputs.should_run == 'true' && steps.analysis.outputs.analysis_status == 'success'
+      id: report-info
+      run: |
+        if [ -d "reports" ] && [ "$(ls -A reports)" ]; then
+          # Get the latest report file for naming
+          LATEST_REPORT=$(ls -t reports/*.md 2>/dev/null | head -1)
+          if [ -n "$LATEST_REPORT" ]; then
+            REPORT_NAME=$(basename "$LATEST_REPORT" .md)
+            echo "report_name=$REPORT_NAME" >> $GITHUB_OUTPUT
+            echo "has_reports=true" >> $GITHUB_OUTPUT
+
+            # List all generated files
+            FILES=$(ls reports/*.md reports/*.json 2>/dev/null | sed 's|^reports/|- `reports/|; s|$|`|')
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_reports=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "has_reports=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Pull Request
+      if: steps.check.outputs.should_run == 'true' && steps.analysis.outputs.analysis_status == 'success' && steps.report-info.outputs.has_reports == 'true'
+      id: create-pr
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        commit-message: "Add Kubernetes release analysis: ${{ steps.report-info.outputs.report_name }} [triggered by /rerun]"
+        title: "📊 Kubernetes Release Analysis: ${{ steps.report-info.outputs.report_name }} [/rerun]"
+        body: |
+          ## 🚀 Kubernetes Release Analysis Report
+
+          This PR contains the automated analysis results for the latest Kubernetes release.
+          **Triggered by**: /rerun command in PR #${{ github.event.issue.number }}
+
+          ### 📁 Generated Files
+          ${{ steps.report-info.outputs.files }}
+
+          ### 📋 Analysis Details
+          - **Prerelease included**: Yes
+          - **Generated at**: ${{ github.event.head_commit.timestamp || github.run_id }}
+          - **Triggered by**: @${{ github.event.comment.user.login }} in PR #${{ github.event.issue.number }}
+          - **Workflow run**: [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ### 🔍 Review Instructions
+          1. Review the generated Markdown report for human-readable analysis
+          2. Check the JSON file for structured data
+          3. Verify the analysis quality and completeness
+          4. Merge when satisfied with the results
+
+          ---
+          *🤖 This PR was automatically generated by the Kubernetes Release Tracker*
+        branch: kubernetes-analysis/${{ steps.report-info.outputs.report_name }}-rerun
+        delete-branch: true
+        draft: false
+    
+    - name: Comment on success
+      if: steps.check.outputs.should_run == 'true' && steps.analysis.outputs.analysis_status == 'success'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const prUrl = '${{ steps.create-pr.outputs.pull-request-url }}';
+          const prNumber = '${{ steps.create-pr.outputs.pull-request-number }}';
+
+          let message = `✅ Kubernetes release analysis completed successfully!
+
+          📊 Analysis included prerelease versions, reports have been generated, and notifications have been sent.`;
+
+          if (prUrl && prNumber) {
+            message += `\n📋 **Pull Request created**: [#${prNumber}](${prUrl})
+
+          Please review the generated analysis reports in the PR and merge when satisfied.`;
+          } else {
+            message += `\n📁 Reports have been generated but no PR was created (possibly no new changes).`;
+          }
+
+          message += `\n\n📋 View the [workflow run](${runUrl}) for execution logs.`;
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: message
+          });
+
+    - name: Comment on failure
+      if: steps.check.outputs.should_run == 'true' && steps.analysis.outputs.analysis_status != 'success'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const message = `❌ Kubernetes release analysis failed.
+          
+          🔍 Please check the [workflow run](${runUrl}) for error details.
+          💡 Common issues: API token configuration, network connectivity, or service availability.`;
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: message
+          });
+    
+    - name: Comment on permission denied
+      if: steps.check.outputs.should_run == 'false'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const reason = '${{ steps.check.outputs.reason }}';
+          let message;
+
+          if (reason === 'No /rerun command found') {
+            // Don't comment for non-rerun comments
+            return;
+          } else if (reason === 'Insufficient permissions') {
+            message = `🚫 Sorry, you don't have permission to trigger the Kubernetes release analysis.
+
+            Only users with write or admin access can use the \`/rerun\` command.`;
+          } else {
+            message = `⚠️ Unable to process the /rerun command: ${reason}`;
+          }
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: message
+          });
+

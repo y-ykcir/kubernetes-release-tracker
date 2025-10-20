@@ -1,0 +1,55 @@
+# Kubernetes Release Tracker Configuration
+
+github:
+  api_url: "https://api.github.com"
+  repo_owner: "kubernetes"
+  repo_name: "kubernetes"
+  # token: ""  # Set via GITHUB_TOKEN environment variable
+  changelog_url_template: "https://raw.githubusercontent.com/kubernetes/kubernetes/master/CHANGELOG/CHANGELOG-{version}.md"
+
+llm:
+  api_url: "https://qianfan.baidubce.com/v2/chat/completions"
+  model: "deepseek-v3.2-think"
+  # token: ""  # Set via QIANFAN_TOKEN environment variable
+  max_tokens: 4000
+  temperature: 0.1
+
+notification:
+  webhook_url: "http://api.im.baidu.com/api/msg/groupmsgsend"
+  # access_token: ""  # Set via RULIU_ACCESS_TOKEN environment variable
+  # target_ids: []  # Set via RULIU_TARGET_IDS environment variable
+
+analysis:
+  max_links_to_analyze: 50
+  important_keywords:
+    - "panic"
+    - "deadlock"
+    - "crash"
+    - "security"
+    - "vulnerability"
+    - "CVE"
+    - "memory leak"
+    - "performance"
+    - "critical"
+    - "urgent"
+    - "regression"
+    - "breaking change"
+    - "deprecation"
+  parse_changelog: true
+  focus_sections:
+    - "Important Security Information"  # 重要安全信息（最高优先级）
+    - "Urgent Upgrade Notes"             # 紧急升级注意事项
+    - "Deprecation"                      # 废弃功能
+    - "API Change"                       # API 变更
+    - "Bug or Regression"                # Bug 修复
+    - "Feature"                          # 新功能
+    - "Documentation"                    # 文档更新
+    # 注意：Changes by Kind 是父标题，不需要单独配置
+
+reports:
+  output_dir: "reports"
+  template_dir: "templates"
+  include_full_analysis: true
+  include_pr_details: true
+  include_issue_details: true
+
