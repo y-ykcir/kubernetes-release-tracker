@@ -1,0 +1,503 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-12T12:48:08.677879",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.34.2",
+    "name": "Kubernetes v1.34.2",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.34.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.34.md) for more details.\n\n\n\n",
+    "published_at": "2025-11-12T09:26:08Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.34.2",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.34.2 是一个稳定性修复版本，主要解决了 kubelet、kube-proxy、调度器和 kubeadm 的关键 bug，并升级了 Go 和 etcd 版本以提升安全性和性能。",
+    "key_changes": [
+      "修复 kubelet 指标多次注册导致缺失 volume 统计指标的问题 - [PR #133905](https://github.com/kubernetes/kubernetes/pull/133905)",
+      "修复 DRA kubelet 在 gRPC 连接空闲时发生死锁的问题 - [PR #133934](https://github.com/kubernetes/kubernetes/pull/133934)",
+      "修复 Windows kube-proxy 在 InternalTrafficPolicy=Local 时 ClusterIP 负载均衡器消失的问题 - [PR #134031](https://github.com/kubernetes/kubernetes/pull/134031)",
+      "禁用 SchedulerAsyncAPICalls 特性门控以缓解调度器性能回归 - [PR #134401](https://github.com/kubernetes/kubernetes/pull/134401)",
+      "升级 Go 版本到 1.24.9 并更新基础镜像 - [PR #134612](https://github.com/kubernetes/kubernetes/pull/134612)",
+      "升级支持的 etcd 版本到 v3.5.24 - [PR #134861](https://github.com/kubernetes/kubernetes/pull/134861)"
+    ],
+    "important_bugfixes": [
+      "修复 kubelet 指标注册问题：缺失 kubelet_volume_stats_* 指标，影响监控和告警 - [PR #133905](https://github.com/kubernetes/kubernetes/pull/133905) - **影响：** 生产环境中卷使用情况监控数据丢失",
+      "修复 DRA kubelet 死锁：当 gRPC 连接空闲 30 分钟后导致设备资源分配失败 - [PR #133934](https://github.com/kubernetes/kubernetes/pull/133934) - **影响：** 使用动态资源分配的 Pod 可能无法正常启动",
+      "修复 kube-proxy nftables 模式接口匹配错误：导致本地流量识别失败 - [PR #134118](https://github.com/kubernetes/kubernetes/pull/134118) - **影响：** 网络策略和服务路由可能异常",
+      "修复调度器异步抢占 bug：减少抢占 Pod 的过度重试 - [PR #134247](https://github.com/kubernetes/kubernetes/pull/134247) - **影响：** 高负载下调度延迟增加",
+      "修复 kube-controller-manager pod 控制器索引问题：处理错误 ownerReference 时可能崩溃 - [PR #134658](https://github.com/kubernetes/kubernetes/pull/134658) - **影响：** 控制器管理功能不稳定"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "禁用 SchedulerAsyncAPICalls 特性门控：缓解高负载下调度器性能退化 - [PR #134401](https://github.com/kubernetes/kubernetes/pull/134401) - **提升：** 减少 kube-apiserver 负载，改善调度延迟",
+      "升级 Go 到 1.24.9：包含运行时和安全性改进 - [PR #134612](https://github.com/kubernetes/kubernetes/pull/134612) - **提升：** 整体运行时性能和安全性提升",
+      "升级 etcd 到 v3.5.24：修复已知问题并优化性能 - [PR #134861](https://github.com/kubernetes/kubernetes/pull/134861) - **提升：** 集群数据存储稳定性和效率改善"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "建议所有 v1.34 用户尽快升级，以修复关键稳定性问题",
+      "如果启用了 SchedulerAsyncAPICalls 特性门控，升级后它将自动禁用，需评估调度性能影响",
+      "在生产环境升级前，在测试环境中验证网络、存储和调度功能",
+      "对于使用 DRA 或 Windows 节点的集群，优先测试相关功能"
+    ],
+    "risk_assessment": "整体风险评估：低风险。此版本主要为 bug 修复和稳定性改进，无破坏性变更。建议在业务低峰期升级，并重点关注网络、存储和调度组件的验证。"
+  },
+  "statistics": {
+    "analyzed_prs": 15,
+    "analyzed_issues": 0,
+    "important_items": 15
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#133905: Automated cherry pick of #133890: kubelet/metrics: fix multiple Register call",
+      "reason": "Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#133934: Automated cherry pick of #133926: DRA kubelet: avoid deadlock when gRPC connection to driver goes idle",
+      "reason": "Contains 'deadlock'; Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134031: Automated cherry pick of #133953: Fix ClusterIP load balancer disappearing when InternalTrafficPolicy: Local is set.",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134087: release-1.34: pin system-validators to v1.10.2",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#134118: Automated cherry pick of #134024: fix: use iifname for input interface name matches",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134133: Automated cherry pick of #134054: fix incorrect warning whenever headless service is created/updated",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134247: Automated cherry pick of #134245: Revert \"fix: handle corner cases in the async preemption\"",
+      "reason": "Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#134270: Automated cherry pick of #134265: kubeadm: ensure waiting for apiserver uses a local client",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134362: Automated cherry pick of #134319: kubeadm: rework the FetchInitConfigurationFromCluster node flags",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#134401: Automated cherry pick of #134400: Disable SchedulerAsyncAPICalls feature gate due to a known regression in v1.34",
+      "reason": "Contains 'performance'; Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#134589: Automated cherry pick of #134588: go 1.25.2/1.24.8 related fixes",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#134658: Automated cherry pick of #134654: Include relevant dimensions in pod controller indexing",
+      "reason": "Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#134222: [release-1.34][go] Bump images, dependencies and versions to go 1.24.7 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#134612: [release-1.34][go] Bump dependencies, images and versions used to Go 1.24.9 and distroless iptables ",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#134861: [release-1.34] etcd: Bump supported etcd version to v3.5.24 for release v1.31, v1.32, and v1.33",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    }
+  ],
+  "prs": {
+    "133905": {
+      "title": "Automated cherry pick of #133890: kubelet/metrics: fix multiple Register call",
+      "url": "https://github.com/kubernetes/kubernetes/pull/133905",
+      "body": "Cherry pick of #133890 on release-1.34.\n\n#133890: kubelet/metrics: fix multiple Register call\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFix missing kubelet_volume_stats_* metrics\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-05T06:54:45Z",
+      "merged_at": "2025-09-26T08:34:19Z",
+      "author": "huww98",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/instrumentation",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "133934": {
+      "title": "Automated cherry pick of #133926: DRA kubelet: avoid deadlock when gRPC connection to driver goes idle",
+      "url": "https://github.com/kubernetes/kubernetes/pull/133934",
+      "body": "Cherry pick of #133926 on release-1.34.\n\n#133926: DRA kubelet: avoid deadlock when gRPC connection to driver goes idle\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubelet: the connection to a DRA driver became unusable because of an internal deadlock when a connection was idle for 30 minutes.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-08T14:39:38Z",
+      "merged_at": "2025-09-26T08:34:28Z",
+      "author": "pohly",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    },
+    "134031": {
+      "title": "Automated cherry pick of #133953: Fix ClusterIP load balancer disappearing when InternalTrafficPolicy: Local is set.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134031",
+      "body": "Cherry pick of #133953 on release-1.34.\r\n\r\n/kind bug\r\n\r\n#133953: Fix ClusterIP load balancer disappearing when InternalTrafficPolicy: Local is set.\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFix Windows kube-proxy to prevent intermittent deletion of ClusterIP load balancers in HNS when internalTrafficPolicy=Local, ensuring stable service connectivity.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-12T04:47:24Z",
+      "merged_at": "2025-09-26T08:34:36Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "134087": {
+      "title": "release-1.34: pin system-validators to v1.10.2",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134087",
+      "body": "#### What type of PR is this?\r\n/kind bug\r\n\r\ncherry-pick #134089 to v1.34 \r\n\r\n\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\nxref https://github.com/kubernetes/system-validators/issues/51\r\n\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nBump system-validators to v1.10.2: remove version-specific cgroup kernel config checks to avoid false failures on cgroup v2 systems when v1-only configs are missing.\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-16T15:07:50Z",
+      "merged_at": "2025-09-26T08:34:44Z",
+      "author": "pacoxu",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "needs-priority",
+        "area/dependency",
+        "needs-triage"
+      ]
+    },
+    "134118": {
+      "title": "Automated cherry pick of #134024: fix: use iifname for input interface name matches",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134118",
+      "body": "Cherry pick of #134024 on release-1.34.\n\n#134024: fix: use iifname for input interface name matches\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixed a bug in kube-proxy nftables mode (GA as of 1.33) that fails to determine if traffic originates from a local source on the node. The issue was caused by using the wrong meta `iif` instead of `iifname` for name based matches.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-17T16:59:20Z",
+      "merged_at": "2025-09-19T19:56:14Z",
+      "author": "jack4it",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "134133": {
+      "title": "Automated cherry pick of #134054: fix incorrect warning whenever headless service is created/updated",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134133",
+      "body": "Cherry pick of #134054 on release-1.34.\n\n#134054: fix incorrect warning whenever headless service is created/updated\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nremove incorrectly printed warning for SessionAffinity whenever a headless service is creater or updated\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-18T15:19:50Z",
+      "merged_at": "2025-10-08T08:53:02Z",
+      "author": "Peac36",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "134247": {
+      "title": "Automated cherry pick of #134245: Revert \"fix: handle corner cases in the async preemption\"",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134247",
+      "body": "Cherry pick of #134245 on release-1.34.\n\n#134245: Revert \"fix: handle corner cases in the async preemption\"\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixed a bug in kube-scheduler where pending pod preemption caused preemptor pods to be retried more frequently.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-24T15:01:15Z",
+      "merged_at": "2025-09-26T09:52:19Z",
+      "author": "macsko",
+      "labels": [
+        "area/test",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "134270": {
+      "title": "Automated cherry pick of #134265: kubeadm: ensure waiting for apiserver uses a local client",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134270",
+      "body": "Cherry pick of #134265 on release-1.34.\r\n\r\n#134265: kubeadm: ensure waiting for apiserver uses a local client\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nkubeadm: ensured waiting for apiserver uses a local client that doesn't reach to the control plane endpoint and instead reaches directly to the local API server endpoint.\r\n```\r\n\r\nincludes fixup https://github.com/kubernetes/kubernetes/pull/134274 as second commit",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-25T13:58:01Z",
+      "merged_at": "2025-09-26T07:22:19Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "134362": {
+      "title": "Automated cherry pick of #134319: kubeadm: rework the FetchInitConfigurationFromCluster node flags",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134362",
+      "body": "Cherry pick of #134319 on release-1.34.\n\n#134319: kubeadm: rework the FetchInitConfigurationFromCluster node flags\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: fixed a bug where the node registration information for a given node was not fetched correctly during \"kubeadm upgrade node\" and the node name can end up being incorrect in cases where the node name is not the same as the host name.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-01T19:51:26Z",
+      "merged_at": "2025-10-02T07:40:57Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "134401": {
+      "title": "Automated cherry pick of #134400: Disable SchedulerAsyncAPICalls feature gate due to a known regression in v1.34",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134401",
+      "body": "Cherry pick of #134400 on release-1.34.\n\n#134400: Disable SchedulerAsyncAPICalls feature gate due to a known regression in v1.34\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nThe SchedulerAsyncAPICalls feature gate has been disabled to mitigate a bug where its interaction with asynchronous preemption in could degrade kube-scheduler performance, particularly under high kube-apiserver load.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-03T12:50:31Z",
+      "merged_at": "2025-10-06T16:08:59Z",
+      "author": "macsko",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "134589": {
+      "title": "Automated cherry pick of #134588: go 1.25.2/1.24.8 related fixes",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134589",
+      "body": "Cherry pick of #134588 on release-1.34.\r\n\r\n#134588: go 1.25.2/1.24.8 related fixes\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nkubeadm: fixes a preflight check that can fail hostname construction in IPV6 setups\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-14T13:37:15Z",
+      "merged_at": "2025-10-14T15:41:35Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "priority/important-soon",
+        "lgtm",
+        "area/provider/gcp",
+        "sig/api-machinery",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/auth",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/cloud-provider",
+        "triage/accepted"
+      ]
+    },
+    "134658": {
+      "title": "Automated cherry pick of #134654: Include relevant dimensions in pod controller indexing",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134658",
+      "body": "Cherry pick of #134654 on release-1.34.\n\n#134654: Include relevant dimensions in pod controller indexing\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkube-controller-manager: Resolves potential issues handling pods with incorrect uids in their ownerReference\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-16T17:57:52Z",
+      "merged_at": "2025-10-17T13:08:47Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "134222": {
+      "title": "[release-1.34][go] Bump images, dependencies and versions to go 1.24.7 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134222",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump dependencies, images and versions used to Go 1.24.7 and distroless iptables\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4129\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built using Go 1.24.7\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-09-23T13:24:07Z",
+      "merged_at": "2025-09-24T16:08:17Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "134612": {
+      "title": "[release-1.34][go] Bump dependencies, images and versions used to Go 1.24.9 and distroless iptables ",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134612",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump dependencies, images and versions used to Go 1.24.9 and distroless iptables\r\n- update setcap and debian-base to bookworm-v1.0.6\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4159\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\n- Kubernetes is now built using Go 1.24.9\r\n- update setcap and debian-base to bookworm-v1.0.6\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-15T09:45:42Z",
+      "merged_at": "2025-10-17T14:28:52Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "area/provider/gcp",
+        "sig/storage",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "sig/architecture",
+        "area/conformance",
+        "sig/cloud-provider",
+        "needs-priority",
+        "needs-triage",
+        "sig/etcd"
+      ]
+    },
+    "134861": {
+      "title": "[release-1.34] etcd: Bump supported etcd version to v3.5.24 for release v1.31, v1.32, and v1.33",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134861",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind cleanup\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\nRef: https://github.com/etcd-io/etcd/issues/20805\r\nManual backport of https://github.com/kubernetes/kubernetes/pull/134779\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkubeadm: updated the supported etcd version to v3.5.24 for the skewed control plane version v1.33.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/cc @ahrtr @neolit123 \r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-24T17:27:46Z",
+      "merged_at": "2025-11-03T17:00:08Z",
+      "author": "joshjms",
+      "labels": [
+        "priority/important-soon",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {}
+}
