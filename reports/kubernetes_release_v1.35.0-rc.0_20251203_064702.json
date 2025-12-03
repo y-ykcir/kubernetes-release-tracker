@@ -1,0 +1,175 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-03T06:47:33.595975",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.0-rc.0",
+    "name": "Kubernetes v1.35.0-rc.0",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2025-12-03T06:27:07Z",
+    "prerelease": true,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.0-rc.0",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.0-rc.0 主要修复了admission控制中的竞争条件bug和alpha API警告问题，同时升级了Go版本以提升构建安全性。",
+    "key_changes": [
+      "修复alpha API版本差异警告问题 - [PR #135327](https://github.com/kubernetes/kubernetes/pull/135327)",
+      "Admission控制中命名空间查找回退机制优化 - [PR #135359](https://github.com/kubernetes/kubernetes/pull/135359)",
+      "升级Go版本到1.25.4和distroless iptables - [PR #135492](https://github.com/kubernetes/kubernetes/pull/135492)"
+    ],
+    "important_bugfixes": [
+      "修复alpha API在apiserver启动时产生不必要的版本警告日志 - [PR #135327](https://github.com/kubernetes/kubernetes/pull/135327) - **影响：** 减少生产环境日志噪音，避免误导性警告信息",
+      "修复ValidatingAdmissionPolicy在新建命名空间后立即创建工作负载时出现虚假'namespace not found'错误 - [PR #135359](https://github.com/kubernetes/kubernetes/pull/135359) - **影响：** 防止admission控制误拒合法请求，提升工作负载创建可靠性"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "升级Go语言版本到1.25.4，包含运行时性能优化和安全补丁 - [PR #135492](https://github.com/kubernetes/kubernetes/pull/135492) - **提升：** 潜在的内存和CPU效率改进，具体数据需实测验证"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "建议在测试环境中充分验证ValidatingAdmissionPolicy的行为，特别是命名空间创建后的工作负载部署场景",
+      "升级前检查是否使用了alpha API，确保版本兼容性",
+      "由于是Release Candidate版本，不建议直接在生产环境部署，等待正式版发布"
+    ],
+    "risk_assessment": "整体风险评估：中等风险。作为RC版本，可能存在未发现的边缘情况。建议的升级时机：在测试集群验证无误后，可考虑在非关键生产环境小范围试用。需要特别关注admission控制策略的稳定性和Go版本升级后的运行时表现。"
+  },
+  "statistics": {
+    "analyzed_prs": 3,
+    "analyzed_issues": 2,
+    "important_items": 5
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#135327: Fix alpha API warnings for patch version differences",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#135359: Fallback to live ns lookup on admission if lister cannot find namespace",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#135492: [go] Bump images and versions to go 1.25.4 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#134023: Alpha API warnings printed to apiserver logs on startup",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'; Has label 'kind/regression'"
+    },
+    {
+      "type": "Issue",
+      "title": "#135352: ValidatingAdmissionPolicy namespace lookup raced newly created namespaces, produces spurious \"namespace not found\" rejections",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    }
+  ],
+  "prs": {
+    "135327": {
+      "title": "Fix alpha API warnings for patch version differences",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135327",
+      "body": "Follow up to #134035\r\n\r\n<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind bug\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nFixes issue https://github.com/kubernetes/kubernetes/issues/134023 where alpha API warnings were being logged when binary version (1.34.1) and emulation version (1.34) differed only in patch version.\r\n\r\nThe issue was in api_enablement.go where the version comparison was using EqualTo() which compares all version components including patch versions. The fix changes the comparison to only check major.minor versions using version.MajorMinor().\r\n\r\n#### Which issue(s) this PR is related to:\r\nFixes #134023\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\n\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkube-apiserver: Fixes spurious warning log messages about enabled alpha APIs while starting API server\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-17T17:37:20Z",
+      "merged_at": "2025-11-19T04:42:00Z",
+      "author": "michaelasp",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "135359": {
+      "title": "Fallback to live ns lookup on admission if lister cannot find namespace",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135359",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nMakes ValidatingAdmissionPolicy and MutatingAdmissionPolicy behave like other admission plugins (webhook admission, namespace lifecycle admission) which fall back to looking up live containing namespace objects if the lister is stale and does not contain a just-created namespace\r\n\r\n#### Which issue(s) this PR is related to:\r\nFixes #135352\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFixes a spurious \"namespace not found\" error possible in default configurations in 1.30+ when using ValidatingAdmissionPolicy or MutatingAdmissionPolicy to intercept namespaced objects in newly-created namespaces\r\n```\r\n\r\n/sig api-machinery\r\n/cc @jpbetz ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-19T22:41:14Z",
+      "merged_at": "2025-11-25T17:48:38Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/M",
+        "approved",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "135492": {
+      "title": "[go] Bump images and versions to go 1.25.4 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135492",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump images and versions to go 1.25.4 and distroless iptables\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4187\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built using Go 1.25.4\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-28T09:22:46Z",
+      "merged_at": "2025-12-02T10:18:24Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {
+    "134023": {
+      "title": "Alpha API warnings printed to apiserver logs on startup",
+      "url": "https://github.com/kubernetes/kubernetes/issues/134023",
+      "body": "### What happened?\n\nAfter upgrading from 1.34.0 to 1.34.1, warnings about alpha APIs are being printed to the kube-apiserver log on startup:\n\n```\n2025-09-11T18:33:21.480458234Z stderr F I0911 18:33:21.479712       1 options.go:263] external host was not specified, using 172.17.0.4\n2025-09-11T18:33:21.482567291Z stderr F I0911 18:33:21.482464       1 server.go:150] Version: v1.34.1\n2025-09-11T18:33:21.482583037Z stderr F I0911 18:33:21.482494       1 server.go:152] \"Golang settings\" GOGC=\"\" GOMAXPROCS=\"\" GOTRACEBACK=\"\"\n2025-09-11T18:33:22.518763498Z stderr F W0911 18:33:22.518574       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=rbac.authorization.k8s.io/v1alpha1\n2025-09-11T18:33:22.518788514Z stderr F W0911 18:33:22.518603       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=storage.k8s.io/v1alpha1\n2025-09-11T18:33:22.518792838Z stderr F W0911 18:33:22.518612       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=admissionregistration.k8s.io/v1alpha1\n2025-09-11T18:33:22.518795242Z stderr F W0911 18:33:22.518623       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=coordination.k8s.io/v1alpha2\n2025-09-11T18:33:22.518798181Z stderr F W0911 18:33:22.518629       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=storagemigration.k8s.io/v1alpha1\n2025-09-11T18:33:22.518800411Z stderr F W0911 18:33:22.518642       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=imagepolicy.k8s.io/v1alpha1\n2025-09-11T18:33:22.518803122Z stderr F W0911 18:33:22.518648       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=scheduling.k8s.io/v1alpha1\n2025-09-11T18:33:22.518805327Z stderr F W0911 18:33:22.518652       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=internal.apiserver.k8s.io/v1alpha1\n2025-09-11T18:33:22.518807747Z stderr F W0911 18:33:22.518657       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=authentication.k8s.io/v1alpha1\n2025-09-11T18:33:22.518813631Z stderr F W0911 18:33:22.518663       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=certificates.k8s.io/v1alpha1\n2025-09-11T18:33:22.518816398Z stderr F W0911 18:33:22.518668       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=resource.k8s.io/v1alpha3\n2025-09-11T18:33:22.518818657Z stderr F W0911 18:33:22.518673       1 api_enablement.go:112] alpha api enabled with emulated version 1.34 instead of the binary's version 1.34.1, this is unsupported, proceed at your own risk: api=node.k8s.io/v1alpha1\n```\n\n### What did you expect to happen?\n\nNo spurious logs\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nRun Kubernetes 1.34.1, look at apiserver logs\n\n### Anything else we need to know?\n\nAppears to be related to https://github.com/kubernetes/kubernetes/pull/133058, which should be checking major+minor versions only, not patch version - as the emulated version will never have a patch version set.\n\n### Kubernetes version\n\n<details>\n\n```console\nroot@rke2-server-001:/# kubectl version\nClient Version: v1.34.1+rke2r1\nKustomize Version: v5.7.1\nServer Version: v1.34.1\n```\n\n</details>\n\n\n### Cloud provider\n\nn/a\n\n\n### OS version\n\n<details>\n\n```console\nroot@rke2-server-001:/# cat /etc/os-release\nPRETTY_NAME=\"Ubuntu 22.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"22.04\"\nVERSION=\"22.04.5 LTS (Jammy Jellyfish)\"\nVERSION_CODENAME=jammy\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=jammy\n```\n\n</details>\n\n\n### Install tools\n\n<details>\nrke2\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\ncontainerd 2.1.4\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\nn/a",
+      "state": "closed",
+      "created_at": "2025-09-11T18:43:02Z",
+      "closed_at": "2025-11-19T04:42:01Z",
+      "author": "brandond",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "sig/api-machinery",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "135352": {
+      "title": "ValidatingAdmissionPolicy namespace lookup raced newly created namespaces, produces spurious \"namespace not found\" rejections",
+      "url": "https://github.com/kubernetes/kubernetes/issues/135352",
+      "body": "### What happened?\n\nWhen creating new workload (observed with Deployment and StatefulSet) immediately after creating its namespace, there is a possibility that watch case has not yet caught up to the new namespace existing.\n\nNaively, this would result in frequent failures, but apiserver guards against this by falling back to live client when namespace was `NotFound`. Example: https://github.com/kubernetes/kubernetes/blob/ab3e83f73424a18f298a0050440af92d2d7c4720/staging/src/k8s.io/apiserver/pkg/admission/plugin/webhook/predicates/namespace/matcher.go#L88\n\nThe issue happens infrequently but can be forced by overriding informer lister to always return NotFound for a specific namespace (see repro instructions below). This way, the call to informer's lister would always fail, while the call to client would remain unaffected - this would force the fallback path, ensuring it is present.\n\n### What did you expect to happen?\n\nNo 404 errors when creating StatefulSets in existing namespaces - even immediately after ns creation.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n\n\n```\n--- a/staging/src/k8s.io/client-go/listers/core/v1/namespace.go\n+++ b/staging/src/k8s.io/client-go/listers/core/v1/namespace.go\n@@ -20,7 +20,6 @@ package v1\n\n import (\n        corev1 \"k8s.io/api/core/v1\"\n-       errors \"k8s.io/apimachinery/pkg/api/errors\"\n        labels \"k8s.io/apimachinery/pkg/labels\"\n        listers \"k8s.io/client-go/listers\"\n        cache \"k8s.io/client-go/tools/cache\"\n@@ -47,17 +46,3 @@ type namespaceLister struct {\n func NewNamespaceLister(indexer cache.Indexer) NamespaceLister {\n        return &namespaceLister{listers.New[*corev1.Namespace](indexer, corev1.Resource(\"namespace\"))}\n }\n-\n-// Get retrieves the Namespace from the index for a given name.\n-// Objects returned here must be treated as read-only.\n-// This method overrides the embedded Get to add custom logic.\n-func (nl *namespaceLister) Get(name string) (*corev1.Namespace, error) {\n-       // 1. Check if the requested namespace is \"lalala\"\n-       if name == \"lalala\" {\n-               // 2. Return not found error if it is\n-               return nil, errors.NewNotFound(corev1.Resource(\"namespace\"), name)\n-       }\n-       // 3. Otherwise, use the parent implementation from the embedded ResourceIndexer\n-       return nl.ResourceIndexer.Get(name)\n-}\n-\n```\n\n\nSteps to reproduce:\n\n  1. Apply the diff above to apiserver code.\n  2. Set up a cluster using that apiserver.\n  3. Create the namespace \"lalala\"\n  4. Create a StatefulSet in that namespace\n  5. Observe the request failing with 404 - it should succeed despite the damaged lister code\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\nBased on our (limited) set of observations, we believe the regression happened between 1.32 and 1.33\n\n### Cloud provider\n\nObservations were made in GKE\n\n### OS version\n\nN/A\n\n### Install tools\n\n_No response_\n\n### Container runtime (CRI) and version (if applicable)\n\n_No response_\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n_No response_",
+      "state": "closed",
+      "created_at": "2025-11-19T18:01:33Z",
+      "closed_at": "2025-11-25T17:48:39Z",
+      "author": "konryd",
+      "labels": [
+        "kind/bug",
+        "sig/api-machinery",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    }
+  }
+}
