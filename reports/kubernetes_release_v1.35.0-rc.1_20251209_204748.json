@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-09T20:48:46.008080",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.0-rc.1",
+    "name": "Kubernetes v1.35.0-rc.1",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2025-12-09T19:13:00Z",
+    "prerelease": true,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.0-rc.1",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.0-rc.1 是一个候选版本，主要修复了多个关键bug，包括服务IP分配器CPU耗尽问题和客户端informers崩溃回归，提升了生产环境的稳定性。",
+    "key_changes": [
+      "修复ipallocator错误处理，防止恶意服务导致API服务器CPU耗尽 - [PR #135499](https://github.com/kubernetes/kubernetes/pull/135499)",
+      "修复Mutating Admission Policy对重复列表项的处理失败，避免策略应用错误 - [PR #135560](https://github.com/kubernetes/kubernetes/pull/135560)",
+      "修复TransformingStore接口嵌入问题，避免informers使用Transformer函数时发生panic - [PR #135580](https://github.com/kubernetes/kubernetes/pull/135580)",
+      "升级构建环境到Go 1.25.5和distroless iptables镜像，提升基础组件安全性 - [PR #135609](https://github.com/kubernetes/kubernetes/pull/135609)",
+      "更新etcd到v3.6.6版本，改进存储层稳定性和性能 - [PR #135271](https://github.com/kubernetes/kubernetes/pull/135271)"
+    ],
+    "important_bugfixes": [
+      "修复ipallocator错误处理：当Service没有名称时，ipallocator会错误重试所有可用IP分配，导致API服务器CPU耗尽 - [PR #135499](https://github.com/kubernetes/kubernetes/pull/135499) - **影响：** 可能被恶意服务利用导致拒绝服务攻击，需优先修复",
+      "修复MAP策略对重复环境变量的处理：允许Mutating Admission Policy处理现有对象中的重复列表项，避免策略应用失败 - [PR #135560](https://github.com/kubernetes/kubernetes/pull/135560) - **影响：** 防止MAP策略拒绝合法Pod，确保策略兼容性",
+      "修复TransformingStore接口问题：解决informers使用Transformer函数时的数据一致性panic - [PR #135580](https://github.com/kubernetes/kubernetes/pull/135580) - **影响：** 避免客户端informers崩溃，确保监控和自动化工具稳定性"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "升级Go语言版本到1.25.5，提升运行时性能和安全性 - [PR #135609](https://github.com/kubernetes/kubernetes/pull/135609) - **提升：** 一般性能优化和漏洞修复",
+      "更新etcd到v3.6.6，引入社区改进和bug修复 - [PR #135271](https://github.com/kubernetes/kubernetes/pull/135271) - **提升：** 存储层响应速度和资源使用效率优化"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "此版本为候选版本（RC），不建议在生产环境直接使用，仅适用于测试集群",
+      "如果进行测试，重点关注服务IP分配、MAP策略和informers功能，验证修复效果",
+      "计划升级到v1.35稳定版时，应提前在预发布环境验证兼容性，并备份关键数据",
+      "监控API服务器CPU使用率，确保ipallocator修复有效防止资源耗尽"
+    ],
+    "risk_assessment": "整体风险评估：作为候选版本，升级风险较高，可能存在未发现的边缘情况。建议等待稳定版发布后再部署到生产环境。如果必须测试，风险级别为中高，需严格监控集群状态，特别是网络和API相关组件。"
+  },
+  "statistics": {
+    "analyzed_prs": 5,
+    "analyzed_issues": 1,
+    "important_items": 6
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#135499: ipallocator: handle errors correctly",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'priority/critical-urgent'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#135560: Fix MAP failure on objects with duplicate list items",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#135580: Embed proper interface in TransformingStore to ensure DeltaFIFO and RealFIFO are implementing it",
+      "reason": "Contains 'panic'; Contains 'regression'; Has label 'kind/bug'; Has label 'priority/critical-urgent'; Has label 'sig/api-machinery'; Has label 'kind/regression'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#135609: Bump images and versions to go 1.25.5 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#135271: etcd: Update etcd to v3.6.6",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "Issue",
+      "title": "#134167: MAP duplicate env parse error",
+      "reason": "Has label 'kind/bug'"
+    }
+  ],
+  "prs": {
+    "135499": {
+      "title": "ipallocator: handle errors correctly",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135499",
+      "body": "The ipallocator was blindly assuming that all errors are retryable, that causes that the allocator tries to exhaust all the possibilities to allocate an IP address.\r\n\r\nIf the error is not retryable this means the allocator will generate as many API calls as existing available IPs are in the allocator, causing CPU exhaustion since this requests are coming from inside the apiserver.\r\n\r\nIn addition to handle the error correctly, this patch also interpret the error to return the right status code depending on the error type.\r\n\r\n/kind bug\r\n/kind regression\r\n\r\n```release-note\r\nfix a bug in the kube-apiserver where a malformed Service without name can cause high CPU usage. The bug is present on the new Cluster IP allocators enabled with the feature MultiCIDRServiceAllocator (enabled by default since 1.33)\r\n```\r\n\r\n/assign @thockin @liggitt @carlory @danwinship \r\n\r\nFixes: #135333 \r\n\r\n/sig network\r\n\r\nmissing unit tests, just running it through CI and for early review\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-28T13:34:53Z",
+      "merged_at": "2025-12-04T18:21:02Z",
+      "author": "aojea",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "priority/critical-urgent",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "135560": {
+      "title": "Fix MAP failure on objects with duplicate list items",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135560",
+      "body": "\r\n#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nWhen a Mutating Admission Policy (MAP) using ApplyConfiguration was applied to an existing object containing duplicate items in a list (e.g., duplicate environment variables), the operation would fail with a conversion error from Structured Merge Diff.\r\n\r\nThis change updates the `ApplyStructuredMergeDiff` function to use `typed.AllowDuplicates` when converting the `originalObject`. This allows MAP to process existing objects that may have technically invalid (duplicate) entries but are permitted by legacy validation.\r\n\r\nNew patches generated by the policy are still strictly enforced my SMD constructs. \r\n\r\nTests have been added to verify:\r\n1. MAP can process an object with duplicate env vars.\r\n2. MAP can modify an existing env var in an object with duplicates (which has the side effect of deduplicating the entry).\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nFixes #134167\r\n\r\n#### Special notes for your reviewer:\r\n\r\nNONE\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nFixes a bug where MutatingAdmissionPolicy would fail to apply to objects with duplicate list items (like env vars).\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-02T23:32:17Z",
+      "merged_at": "2025-12-04T00:14:21Z",
+      "author": "lalitc375",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "135580": {
+      "title": "Embed proper interface in TransformingStore to ensure DeltaFIFO and RealFIFO are implementing it",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135580",
+      "body": "/kind bug\r\n\r\n```release-note\r\nk8s.io/client-go: Fixes a regression in 1.34+ which prevented informers from using configured Transformer functions\r\n```\r\n\r\nDraft to fix pull-kubernetes-e2e-gce test failures from https://github.com/kubernetes/kubernetes/pull/133263\r\n\r\n\r\nAdded a unit test for consistency detection. Without patch from @liggitt we get:\r\n```\r\n@ -2,7 +2,10 @@\r\n  {\r\n   \"metadata\": {\r\n    \"name\": \"pod-1\",\r\n-   \"resourceVersion\": \"1\"\r\n+   \"resourceVersion\": \"1\",\r\n+   \"labels\": {\r\n+    \"transformed\": \"true\"\r\n+   }\r\n   },\r\n   \"spec\": {\r\n    \"containers\": null\r\n--- FAIL: TestReflectorDataConsistencyDetector (0.01s)\r\n    --- FAIL: TestReflectorDataConsistencyDetector/InOrder=false (0.01s)\r\n        --- PASS: TestReflectorDataConsistencyDetector/InOrder=false/Transformer=false (0.01s)\r\n        --- FAIL: TestReflectorDataConsistencyDetector/InOrder=false/Transformer=true (0.00s)\r\npanic: data inconsistency detected for testing/testing.go:1934, panicking! [recovered, repanicked]\r\n\r\ngoroutine 18 [running]:\r\ntesting.tRunner.func1.2({0xcbda80, 0xc0004543e0})\r\n        /pkg/mod/golang.org/toolchain@v0.0.1-go1.25.0.linux-amd64/src/testing/testing.go:1872 +0x237\r\ntesting.tRunner.func1()\r\n        /pkg/mod/golang.org/toolchain@v0.0.1-go1.25.0.linux-amd64/src/testing/testing.go:1875 +0x35b\r\npanic({0xcbda80?, 0xc0004543e0?})\r\n        /pkg/mod/golang.org/toolchain@v0.0.1-go1.25.0.linux-amd64/src/runtime/panic.go:783 +0x132\r\nk8s.io/client-go/util/consistencydetector.CheckDataConsistency[...]({0xf7c090, 0xc00039e050}, {0xc0003ba000, 0x17}, {0xf6e1d0, 0x1}, 0xc00019f840, {{{0x0, 0x0}, {0x0, ...}}, ...}, ...)\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/util/consistencydetector/data_consistency_detector.go:105 +0x799\r\nk8s.io/client-go/tools/cache.checkWatchListDataConsistencyIfRequested[...](...)\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/tools/cache/reflector_data_consistency_detector.go:42\r\nk8s.io/client-go/tools/cache.(*Reflector).watchList(0xc0003841e0, {0xf7c090, 0xc00039e050})\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/tools/cache/reflector.go:798 +0x8e5\r\nk8s.io/client-go/tools/cache.(*Reflector).ListAndWatchWithContext(0xc0003841e0, {0xf7c090, 0xc00039e050})\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/tools/cache/reflector.go:423 +0x1ff\r\nk8s.io/client-go/tools/cache.runTestReflectorDataConsistencyDetector(0xc0003a4000, 0xe802a0)\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/tools/cache/reflector_data_consistency_detector_test.go:111 +0x1e5\r\nk8s.io/client-go/tools/cache.TestReflectorDataConsistencyDetector.func2.1(0xc0003a4000?)\r\n        /src/k8s.io/kubernetes/staging/src/k8s.io/client-go/tools/cache/reflector_data_consistency_detector_test.go:64 +0x17\r\ntesting.tRunner(0xc0003a4000, 0xc000380030)\r\n        /pkg/mod/golang.org/toolchain@v0.0.1-go1.25.0.linux-amd64/src/testing/testing.go:1934 +0xea\r\ncreated by testing.(*T).Run in goroutine 9\r\n        /pkg/mod/golang.org/toolchain@v0.0.1-go1.25.0.linux-amd64/src/testing/testing.go:1997 +0x465\r\nFAIL    k8s.io/client-go/tools/cache    0.035s\r\nFAIL\r\n```\r\n\r\nWith the fix we get\r\n```\r\n--- PASS: TestReflectorDataConsistencyDetector (0.04s)\r\n    --- PASS: TestReflectorDataConsistencyDetector/InOrder=false (0.02s)\r\n        --- PASS: TestReflectorDataConsistencyDetector/InOrder=false/Transformer=false (0.01s)\r\n        --- PASS: TestReflectorDataConsistencyDetector/InOrder=false/Transformer=true (0.01s)\r\n    --- PASS: TestReflectorDataConsistencyDetector/InOrder=true (0.02s)\r\n        --- PASS: TestReflectorDataConsistencyDetector/InOrder=true/Transformer=false (0.01s)\r\n        --- PASS: TestReflectorDataConsistencyDetector/InOrder=true/Transformer=true (0.01s)\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-04T10:48:02Z",
+      "merged_at": "2025-12-04T20:55:04Z",
+      "author": "serathius",
+      "labels": [
+        "kind/bug",
+        "priority/critical-urgent",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "135609": {
+      "title": "Bump images and versions to go 1.25.5 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135609",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump images and versions to go 1.25.5 and distroless iptables\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4205\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built using Go 1.25.5\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-05T09:41:26Z",
+      "merged_at": "2025-12-05T12:42:59Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "kind/feature",
+        "area/release-eng",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "triage/accepted"
+      ]
+    },
+    "135271": {
+      "title": "etcd: Update etcd to v3.6.6",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135271",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind cleanup\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n[etcd release 3.6.6](https://github.com/etcd-io/etcd/blob/main/CHANGELOG/CHANGELOG-3.6.md)\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\netcd: Update etcd to v3.6.6\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nnone\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-12T10:04:29Z",
+      "merged_at": "2025-12-08T07:39:29Z",
+      "author": "bzsuni",
+      "labels": [
+        "area/test",
+        "kind/cleanup",
+        "lgtm",
+        "area/provider/gcp",
+        "sig/api-machinery",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/cloud-provider",
+        "needs-priority",
+        "needs-triage",
+        "sig/etcd"
+      ]
+    }
+  },
+  "issues": {
+    "134167": {
+      "title": "MAP duplicate env parse error",
+      "url": "https://github.com/kubernetes/kubernetes/issues/134167",
+      "body": "### What happened?\n\nThe following pod gets rejected by MAP in kubernetes 1.33\n\n```\napiVersion: v1\nkind: Pod\nmetadata:\n  name: hello-world\nspec:\n  containers:\n  - name: hello-world-container\n    image: nginx:latest\n    ports:\n    - containerPort: 80\n    env:\n    - name: test\n      value: a\n    - name: test\n      value: b\n```\n\nThe pods \"hello-world\" is invalid: : policy 'seccomp-profile-default' with binding 'seccomp-profile-default-user-tenant' denied request: error applying patch: failed to convert original object to typed object: .spec.containers[name=\"hello-world-container\"].env: duplicate entries for key [name=\"test\"]\n\nThe pod normally works, without MAP. It does give a warning on loading.\n\n### What did you expect to happen?\n\nIt should work the same way without a MAP policy?\n\nInterestingly, it works with a VAP i.n place, just not with a MAP..\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nClient Version: v1.33.5\nKustomize Version: v5.6.0\nServer Version: v1.33.3\n```\n</details>\n\n\n### Cloud provider\n\n<details>\nNA\n</details>\n\n\n### OS version\n\nNA\n\n### Install tools\n\nNA\n\n\n### Container runtime (CRI) and version (if applicable)\n\nNA\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\nNA",
+      "state": "closed",
+      "created_at": "2025-09-19T18:58:59Z",
+      "closed_at": "2025-12-04T00:14:22Z",
+      "author": "kfox1111",
+      "labels": [
+        "kind/bug",
+        "needs-sig",
+        "needs-triage"
+      ]
+    }
+  }
+}
