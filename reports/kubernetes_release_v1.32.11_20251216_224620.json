@@ -1,0 +1,221 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-16T22:47:17.960491",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.32.11",
+    "name": "Kubernetes v1.32.11",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.32.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.32.md) for more details.\n\n\n\n",
+    "published_at": "2025-12-16T21:28:50Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.32.11",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.32.11 是一个维护版本，主要包含重要的稳定性修复和 Go 版本升级，建议生产环境尽快升级以解决设备管理器健康状态和准入控制命名空间查找的关键问题",
+    "key_changes": [
+      "设备管理器健康状态修复 - [PR #135209](https://github.com/kubernetes/kubernetes/pull/135209) - **影响：** 解决设备管理器在启动前被错误标记为健康状态的问题，避免系统看门狗误杀 kubelet",
+      "准入控制命名空间查找回退机制 - [PR #135444](https://github.com/kubernetes/kubernetes/pull/135444) - **影响：** 修复 ValidatingAdmissionPolicy 和 MutatingAdmissionPolicy 在新创建命名空间时可能出现的 'namespace not found' 错误"
+    ],
+    "important_bugfixes": [
+      "rsync IP 地址检测修复 - [PR #135578](https://github.com/kubernetes/kubernetes/pull/135578) - **影响：** 解决 v1.32 版本中 rsync IP 地址检测的回归问题，影响网络同步功能",
+      "设备管理器启动顺序优化 - [PR #135209](https://github.com/kubernetes/kubernetes/pull/135209) - **影响：** 防止容器运行时初始化过慢导致 kubelet 被系统看门狗终止"
+    ],
+    "security_issues": [
+      "Go 版本升级至 1.24.10 - [PR #135508](https://github.com/kubernetes/kubernetes/pull/135508) - **风险级别：** 中 - 包含 Go 语言安全补丁和运行时改进",
+      "Go 版本升级至 1.24.11 - [PR #135614](https://github.com/kubernetes/kubernetes/pull/135614) - **风险级别：** 中 - 进一步的安全和稳定性改进"
+    ],
+    "performance_improvements": [
+      "构建系统 rsync 移除计划 - [Issue #112862](https://github.com/kubernetes/kubernetes/issues/112862) - **提升：** 简化构建流程，减少复杂依赖，提高构建效率",
+      "Go 1.24 版本性能优化 - [PR #135508](https://github.com/kubernetes/kubernetes/pull/135508) - **提升：** Go 运行时性能改进和内存优化"
+    ],
+    "breaking_changes": [
+      "无重大破坏性变更 - 此版本主要为 bug 修复和维护性更新"
+    ],
+    "recommendations": [
+      "**立即升级建议：** 特别是使用设备管理器和准入控制策略的环境应优先升级",
+      "**测试重点：** 验证设备管理器的健康状态监控和准入控制策略在新创建命名空间中的行为",
+      "**构建环境：** 如果使用自定义构建流程，注意 rsync 相关变更可能的影响",
+      "**监控建议：** 升级后密切监控 kubelet 稳定性和准入控制策略的执行情况"
+    ],
+    "risk_assessment": "整体风险评估：低风险 - 此版本主要为稳定性修复和安全性更新，建议在测试环境验证后尽快安排生产环境升级，特别关注设备管理相关组件的稳定性"
+  },
+  "statistics": {
+    "analyzed_prs": 5,
+    "analyzed_issues": 1,
+    "important_items": 6
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#135209: Automated cherry pick of #135153: mark device manager as haelthy before it started for the first time",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#135444: Automated cherry pick of #135359: Fallback to live ns lookup on admission if lister cannot find namespace",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#135578: fix rsync IP address detection for v1.32",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#135508: [release-1.32][go] Bump dependencies, images and versions used to Go 1.24.10 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#135614: [release-1.32][go] Bump dependencies, images and versions used to Go 1.24.11 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#112862: remove rsync from build",
+      "reason": "Contains 'performance'; Performance related"
+    }
+  ],
+  "prs": {
+    "135209": {
+      "title": "Automated cherry pick of #135153: mark device manager as haelthy before it started for the first time",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135209",
+      "body": "Cherry pick of #135153 on release-1.32.\n\n#135153: mark device manager as haelthy before it started for the first time\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nThe slow initialization of container runtime will not cause System WatchDog to kill kubelet. Device Manager is not considered healthy before it attempted to start listening on the port. \r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-07T03:07:00Z",
+      "merged_at": "2025-12-04T14:58:56Z",
+      "author": "SergeyKanzhelev",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "135444": {
+      "title": "Automated cherry pick of #135359: Fallback to live ns lookup on admission if lister cannot find namespace",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135444",
+      "body": "Cherry pick of #135359 on release-1.32.\n\n#135359: Fallback to live ns lookup on admission if lister cannot find namespace\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixes a spurious \"namespace not found\" error possible in default configurations in 1.30+ when using ValidatingAdmissionPolicy or MutatingAdmissionPolicy to intercept namespaced objects in newly-created namespaces\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-25T18:15:42Z",
+      "merged_at": "2025-12-01T20:36:23Z",
+      "author": "lalitc375",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "135578": {
+      "title": "fix rsync IP address detection for v1.32",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135578",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nFixes detecting the container's IP address when building.\r\n\r\nSee: #135575 \r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThis is NOT a cherry-pick / backport, as due to https://github.com/kubernetes/kubernetes/issues/112862 1.35+ / master do not use rsync at all anymore. Rather than backporting that larger change, we are just fixing the issue with rsync.\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nmake / build: fix docker IP address detection\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\nx-ref https://github.com/kubernetes/kubernetes/pull/135576",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-03T20:20:50Z",
+      "merged_at": "2025-12-04T08:50:22Z",
+      "author": "BenTheElder",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "135508": {
+      "title": "[release-1.32][go] Bump dependencies, images and versions used to Go 1.24.10 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135508",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump dependencies, images and versions used to Go 1.24.10 and distroless iptables\r\n\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4187\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\n- Kubernetes is now built using Go 1.24.10\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-29T10:20:05Z",
+      "merged_at": "2025-12-01T12:54:24Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "135614": {
+      "title": "[release-1.32][go] Bump dependencies, images and versions used to Go 1.24.11 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135614",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump dependencies, images and versions used to Go 1.24.11 and distroless iptables\r\n\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4205\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\n- Kubernetes is now built using Go 1.24.11\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-05T10:49:40Z",
+      "merged_at": "2025-12-05T12:44:57Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {
+    "112862": {
+      "title": "remove rsync from build",
+      "url": "https://github.com/kubernetes/kubernetes/issues/112862",
+      "body": "There's a _lot_ of complexity in the build system around rsync + build + data containers.\r\n\r\nThis was mostly added to work around docker desktop filesystem performance on macOS, but also used to support building against docker on a remote VM.\r\n\r\nBesides the docker desktop licensing changes probably reducing how many developers are actually using docker desktop, it's not clear that we should still be jumping through this many hoops in the build.\r\n\r\nOTOH, removing it may be fairly involved, and it's possible the performance gap is still substantial, even if using filesystem caching (which appears to be replaced now https://github.com/docker/for-mac/issues/5402).\r\n\r\nWe should test performance and weigh ripping this stuff out to simplify the build.\r\n\r\ncc @thockin @cblecker\r\n\r\n/sig release",
+      "state": "closed",
+      "created_at": "2022-10-04T21:03:27Z",
+      "closed_at": "2025-10-14T18:37:42Z",
+      "author": "BenTheElder",
+      "labels": [
+        "priority/important-longterm",
+        "sig/release",
+        "lifecycle/frozen",
+        "triage/accepted"
+      ]
+    }
+  }
+}
