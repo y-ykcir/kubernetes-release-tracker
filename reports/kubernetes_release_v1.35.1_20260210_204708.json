@@ -1,0 +1,551 @@
+{
+  "metadata": {
+    "generated_at": "2026-02-10T20:48:11.869709",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.1",
+    "name": "v1.35.1",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-02-10T19:03:38Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.1",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.1 是一个紧急补丁版本，主要修复了 v1.35.0 中引入的调度器性能严重回退、kube-proxy 同步回归等关键问题，并包含了 Go 语言安全更新。",
+    "key_changes": [
+      "紧急禁用导致性能问题的 `SchedulerAsyncAPICalls` 特性门控 - [PR #135904](https://github.com/kubernetes/kubernetes/pull/135904)",
+      "修复 kube-proxy (ipvs/winkernel) 因同步逻辑变更导致的网络规则更新延迟回归 - [PR #136122](https://github.com/kubernetes/kubernetes/pull/136122)",
+      "将核心组件构建版本升级至 Go 1.25.6，以修复相关 CVE 漏洞 - [PR #136258](https://github.com/kubernetes/kubernetes/pull/136258) 和 [PR #136466](https://github.com/kubernetes/kubernetes/pull/136466)",
+      "修复 StatefulSet 中 `.status.availableReplicas` 计数延迟，加速滚动更新 - [PR #136097](https://github.com/kubernetes/kubernetes/pull/136097)",
+      "修复 Windows kube-proxy (winkernel) 中双栈 Service 的负载均衡器共享问题 - [PR #136373](https://github.com/kubernetes/kubernetes/pull/136373)"
+    ],
+    "important_bugfixes": [
+      "修复 kubelet 中错误使用 `V().Error()` 导致的日志泛滥问题 - [PR #136432](https://github.com/kubernetes/kubernetes/pull/136432) - **影响：** 错误日志无视 Verbosity 级别始终打印，干扰监控和排错",
+      "修复 `kubectl exec` 中终端大小队列未初始化导致的 Panic - [PR #136280](https://github.com/kubernetes/kubernetes/pull/136280) - **影响：** 特定条件下 `kubectl exec` 命令会崩溃",
+      "修复 kubeadm 升级时因 `kubeadm-flags.env` 文件内容为空导致的失败 - [PR #136131](https://github.com/kubernetes/kubernetes/pull/136131) - **影响：** 特定配置下 kubeadm 集群升级流程会中断",
+      "修复 kubeadm 在 `kubeadm join` 时未等待 etcd learner 成员启动就尝试提升其状态的问题 - [PR #136348](https://github.com/kubernetes/kubernetes/pull/136348) - **影响：** 可能影响 etcd 集群的稳定性和数据一致性",
+      "修复 SELinux 警告控制器对已完成 Pod 发出不必要事件的问题 - [PR #136098](https://github.com/kubernetes/kubernetes/pull/136098) - **影响：** 产生无关的警告事件，干扰事件流"
+    ],
+    "security_issues": [
+      "升级至 Go 1.25.6，修复 Go 标准库中的多个 CVE 漏洞 - [PR #136258](https://github.com/kubernetes/kubernetes/pull/136258) - **风险级别：** 中（取决于具体 CVE 利用条件）",
+      "更新构建镜像和基础组件至包含安全修复的版本 - [PR #136466](https://github.com/kubernetes/kubernetes/pull/136466) - **风险级别：** 低"
+    ],
+    "performance_improvements": [
+      "禁用 `SchedulerAsyncAPICalls` 特性门控，解决因 API 客户端限流导致的调度性能严重下降 - [PR #135904](https://github.com/kubernetes/kubernetes/pull/135904) - **提升：** 恢复 v1.35.0 之前的调度器性能基线",
+      "修复 kubelet 错误日志级别，避免日志泛滥对系统 I/O 和日志收集系统造成不必要的压力 - [PR #136432](https://github.com/kubernetes/kubernetes/pull/136432) - **提升：** 减少无关日志输出，提升日志系统效率"
+    ],
+    "breaking_changes": [
+      "无新增的破坏性变更。此版本主要目的是修复 v1.35.0 中的回归问题。"
+    ],
+    "recommendations": [
+      "**强烈建议所有正在运行或计划升级到 v1.35.0 的集群立即升级到 v1.35.1**，以解决调度器性能回退和 kube-proxy 网络同步问题。",
+      "升级前，请确认集群中未显式启用 `SchedulerAsyncAPICalls` 特性门控（该门控在此版本中已被强制禁用）。",
+      "对于 Windows 节点集群，此版本修复了双栈 Service 的关键问题，建议优先安排升级。",
+      "升级后，观察调度器指标（如调度延迟）和 kube-proxy 日志，确认性能回归问题已解决。",
+      "由于包含了 Go 语言安全更新，建议将此版本视为一次重要的安全维护升级。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险，建议立即升级**。此版本是典型的补丁版本，旨在修复前一个版本（v1.35.0）中引入的严重回归问题，尤其是影响核心组件（调度器、kube-proxy）稳定性和性能的缺陷。升级风险较低，收益（稳定性、安全性修复）显著高于风险。建议的升级时机是尽快在测试环境中验证后，安排生产环境升级。需要特别关注升级后调度性能和网络服务的稳定性是否恢复正常。"
+  },
+  "statistics": {
+    "analyzed_prs": 16,
+    "analyzed_issues": 1,
+    "important_items": 17
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#135815: Automated cherry pick of #135367: Fix apiserver_watch_events_sizes metric.",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#135843: Automated cherry pick of #135748: Update vendored hnslib to v0.1.2",
+      "reason": "Has label 'kind/bug'; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#135853: Automated cherry pick of #135400: kubeadm: do not sort extraArgs alpha-numerically",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#135904: Automated cherry pick of #135903: Disable SchedulerAsyncAPICalls feature gate due to performance issues",
+      "reason": "Contains 'performance'; Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#136097: Automated cherry pick of #135428: schedule pod availability checks at the correct time in StatefulSets",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136098: Automated cherry pick of #135629: selinux: Fix the controller to ignore finished pods",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136122: Automated cherry pick of #135631: Switch ipvs and winkernel back to more regular forced syncs",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#136131: Automated cherry pick of #136127: kubeadm: fix a bug where kubeadm upgrade is failed if the content of the `kubeadm-flags.env` file is `KUBELET_KUBEADM_ARGS=\"\"`",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136280: Automated cherry pick of #135918: kubectl: Fix panic in exec terminal size queue",
+      "reason": "Contains 'panic'; Has label 'kind/bug'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#136348: Automated cherry pick of #136014: kubeadm: waiting for etcd learner member to be started before promoting during 'kubeadm join'",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136373: Automated cherry pick of #136241: Fix for preferred dualstack and required dualstack in winkernel proxier.",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136432: [release-1.35] fix(kubelet): convert V().Error() to V().Info() for verbosity-aware logging",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#136072: Automated cherry pick of #135776: kubeadm: always retry Patch() Node API calls",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#136258: update core binaries to go 1.25.6 for CVE fixes",
+      "reason": "Contains 'CVE'; Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#136466: [release-1.35] [go] Bump images and versions to go 1.25.6 and distroless iptables",
+      "reason": "Has label 'priority/critical-urgent'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#136634: Automated cherry pick of #136529: test: Read /proc/net/nf_conntrack instead of using conntrack binary\n#136554: test: Fix KubeProxy CLOSE_WAIT test for IPv6 environments (and where /proc/net/nf_conntrack may be missing)",
+      "reason": "Has label 'priority/critical-urgent'"
+    },
+    {
+      "type": "Issue",
+      "title": "#136027: Error-level logs incorrectly use verbosity levels",
+      "reason": "Contains 'critical'"
+    }
+  ],
+  "prs": {
+    "135815": {
+      "title": "Automated cherry pick of #135367: Fix apiserver_watch_events_sizes metric.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135815",
+      "body": "Cherry pick of #135367 on release-1.35.\n\n#135367: Fix apiserver_watch_events_sizes metric.\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixes a 1.29 regression in the apiserver_watch_events_sizes metric to report total outgoing watch traffic again\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-18T09:47:45Z",
+      "merged_at": "2026-01-15T20:35:13Z",
+      "author": "mborsz",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "135843": {
+      "title": "Automated cherry pick of #135748: Update vendored hnslib to v0.1.2",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135843",
+      "body": "Cherry pick of #135748 on release-1.35.\r\n\r\n#135748: Update vendored hnslib to v0.1.2\r\n\r\n/kind cleanup\r\n/kind bug\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\n- Dropped archived dependency: Removed the deprecated and archived dependency: github.com/pkg/errors in favor of standard Go error handling.\r\n- Updated to latest HNS version: hnslib is updated to work with the latest HNS APIs, including support for ModifyLoadBalancerPolicy, which allows updating existing load balancer policies instead of delete-and-recreate flows.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-19T08:25:31Z",
+      "merged_at": "2026-01-17T15:11:10Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "kind/cleanup",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "area/dependency",
+        "needs-triage"
+      ]
+    },
+    "135853": {
+      "title": "Automated cherry pick of #135400: kubeadm: do not sort extraArgs alpha-numerically",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135853",
+      "body": "Cherry pick of #135400 on release-1.35.\n\n#135400: kubeadm: do not sort extraArgs alpha-numerically\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: when applying the overrides provided by the user using \"extraArgs\", do not sort the resulted list of arguments alpha-numerically. Instead, only sort the list of default arguments and keep the list of overrides unsorted. This allows finer control for flags which have an order that matters, such as, \"--service-account-issuer\" for kube-apiserver.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-19T16:44:05Z",
+      "merged_at": "2026-01-06T02:10:38Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "135904": {
+      "title": "Automated cherry pick of #135903: Disable SchedulerAsyncAPICalls feature gate due to performance issues",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135904",
+      "body": "Cherry pick of #135903 on release-1.35.\r\n\r\n#135903: Disable SchedulerAsyncAPICalls feature gate due to performance issues\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFixed a 1.35.0 regression by disabling the `SchedulerAsyncAPICalls` feature gate. The regression was in scheduler performance, triggered by API client throttling.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-12-23T11:05:12Z",
+      "merged_at": "2026-01-06T03:08:37Z",
+      "author": "macsko",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "136097": {
+      "title": "Automated cherry pick of #135428: schedule pod availability checks at the correct time in StatefulSets",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136097",
+      "body": "Cherry pick of #135428 on release-1.35.\n\n#135428: schedule pod availability checks at the correct time in StatefulSets\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nStatefulSets should always count `.status.availableReplicas` at the correct time without a delay. This results in faster progress of StatefulSet rollout. \r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-08T10:03:24Z",
+      "merged_at": "2026-01-10T04:09:40Z",
+      "author": "atiratree",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "136098": {
+      "title": "Automated cherry pick of #135629: selinux: Fix the controller to ignore finished pods",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136098",
+      "body": "Cherry pick of #135629 on release-1.35.\r\n\r\n#135629: selinux: Fix the controller to ignore finished pods\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFixed SELinux warning controller not to emit events for completed pods.\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-08T10:15:12Z",
+      "merged_at": "2026-01-09T15:59:44Z",
+      "author": "jsafrane",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "lgtm",
+        "sig/storage",
+        "release-note",
+        "size/XL",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "136122": {
+      "title": "Automated cherry pick of #135631: Switch ipvs and winkernel back to more regular forced syncs",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136122",
+      "body": "Cherry pick of #135631 on release-1.35.\r\n\r\n#135631: Switch ipvs and winkernel back to more regular forced syncs\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFixes a 1.34+ regression in ipvs and winkernel kube-proxy backends; these are now reverted back to their\r\npre-1.34 behavior of regularly rechecking all of their rules even when no\r\nServices or EndpointSlices change.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-09T03:24:30Z",
+      "merged_at": "2026-01-12T21:25:01Z",
+      "author": "danwinship",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "sig/testing",
+        "area/ipvs",
+        "triage/accepted"
+      ]
+    },
+    "136131": {
+      "title": "Automated cherry pick of #136127: kubeadm: fix a bug where kubeadm upgrade is failed if the content of the `kubeadm-flags.env` file is `KUBELET_KUBEADM_ARGS=\"\"`",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136131",
+      "body": "Cherry pick of #136127 on release-1.35.\n\n#136127: kubeadm: fix a bug where kubeadm upgrade is failed if the content of the `kubeadm-flags.env` file is `KUBELET_KUBEADM_ARGS=\"\"`\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: fix a bug where kubeadm upgrade is failed if the content of the `kubeadm-flags.env` file is `KUBELET_KUBEADM_ARGS=\"\"`\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-09T09:52:39Z",
+      "merged_at": "2026-01-14T04:33:35Z",
+      "author": "carlory",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "136280": {
+      "title": "Automated cherry pick of #135918: kubectl: Fix panic in exec terminal size queue",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136280",
+      "body": "Cherry pick of #135918 on release-1.35.\n\n#135918: kubectl: Fix panic in exec terminal size queue\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixed a panic in `kubectl exec` when the terminal size queue delegate is uninitialized.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-16T15:12:48Z",
+      "merged_at": "2026-02-05T22:56:29Z",
+      "author": "seekskyworld",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "area/kubectl",
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "sig/cli",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "136348": {
+      "title": "Automated cherry pick of #136014: kubeadm: waiting for etcd learner member to be started before promoting during 'kubeadm join'",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136348",
+      "body": "Cherry pick of #136014 on release-1.35.\n\n#136014: kubeadm: waiting for etcd learner member to be started before promoting during 'kubeadm join'\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: waiting for etcd learner member to be started before promoting during 'kubeadm join'\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-20T17:16:47Z",
+      "merged_at": "2026-02-05T21:40:31Z",
+      "author": "dlipovetsky",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "136373": {
+      "title": "Automated cherry pick of #136241: Fix for preferred dualstack and required dualstack in winkernel proxier.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136373",
+      "body": "Cherry pick of #136241 on release-1.35.\n\n#136241: Fix for preferred dualstack and required dualstack in winkernel proxier.\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nFixed an issue in the Windows kube-proxy (winkernel) where IPv4 and IPv6 Service load balancers could be incorrectly shared, causing broken dual-stack Service behavior. The kube-proxy now tracks load balancers per IP family, enabling correct support for PreferDualStack and RequireDualStack Services on Windows nodes.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-21T05:39:59Z",
+      "merged_at": "2026-02-05T13:38:41Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "136432": {
+      "title": "[release-1.35] fix(kubelet): convert V().Error() to V().Info() for verbosity-aware logging",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136432",
+      "body": "Cherry-pick of #136028 for release-1.35.\n\n## What type of PR is this?\n\n/kind bug\n\n## What this PR does / why we need it:\n\nThis PR fixes incorrect usage of `logger.V(N).Error()` across the kubelet package. The go-logr package design causes `Error()` calls to bypass verbosity level checks entirely, meaning these logs are always printed regardless of the configured verbosity level.\n\n## Which issue(s) this PR fixes:\n\nFixes #136027\n\nxref: #136028 (original PR for master)\n\n## Special notes for your reviewer:\n\nThis is a manual cherry-pick because the automated cherry-pick bot doesn't work in k/k repo.\n\n**Files modified (13 files, 21 instances):**\n- `pkg/kubelet/allocation/allocation_manager.go`\n- `pkg/kubelet/cm/devicemanager/plugin/v1beta1/client.go`\n- `pkg/kubelet/cm/dra/plugin/dra_plugin_manager.go`\n- `pkg/kubelet/kuberuntime/kuberuntime_container_linux.go`\n- `pkg/kubelet/lifecycle/handlers.go`\n- `pkg/kubelet/metrics/collectors/cri_metrics.go`\n- `pkg/kubelet/pleg/generic.go`\n- `pkg/kubelet/prober/prober.go`\n- `pkg/kubelet/prober/prober_manager.go`\n- `pkg/kubelet/stats/cri_stats_provider.go`\n- `pkg/kubelet/stats/helper.go`\n- `pkg/kubelet/volumemanager/cache/desired_state_of_world.go`\n- `pkg/kubelet/volumemanager/reconciler/reconstruct.go`\n\n## Does this PR introduce a user-facing change?\n\n```release-note\nFixed kubelet logging to properly respect verbosity levels. Previously, some debug/info messages using V().Error() would always be printed regardless of the configured log verbosity.\n```\n\n/sig node\n/area kubelet",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-22T16:48:56Z",
+      "merged_at": "2026-02-05T12:02:31Z",
+      "author": "thc1006",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    },
+    "136072": {
+      "title": "Automated cherry pick of #135776: kubeadm: always retry Patch() Node API calls",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136072",
+      "body": "Cherry pick of #135776 on release-1.35.\n\n#135776: kubeadm: always retry Patch() Node API calls\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: when patching a Node object do not exit early on unknown (non-allowlisted) API errors. Instead, always retry within the duration of the polling for getting and patching a Node object.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-07T13:28:09Z",
+      "merged_at": "2026-01-08T01:37:38Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "kind/feature",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "136258": {
+      "title": "update core binaries to go 1.25.6 for CVE fixes",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136258",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nUpgrades go to 1.25.6 to address vulns:\r\nhttps://groups.google.com/d/msgid/golang-announce/5ee6bc63.BAAACBhEM_oAAAAAAAAAA-p9MGAAAYKKSQYAAAAAADE8OwBpaTkp%40mailjet.com?utm_medium=email&utm_source=footer\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built with Go 1.25.6\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/sig release\r\n\r\nmanual cherry-pick of https://github.com/kubernetes/kubernetes/pull/136257",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-15T19:30:50Z",
+      "merged_at": "2026-01-22T01:49:27Z",
+      "author": "BenTheElder",
+      "labels": [
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "136466": {
+      "title": "[release-1.35] [go] Bump images and versions to go 1.25.6 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136466",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\n- Bump images and versions to go 1.25.6 and distroless iptables\r\n\r\n/assign @liggitt @dims @saschagrunert @puerco \r\ncc @kubernetes/release-managers \r\n\r\n#### Which issue(s) this PR fixes:\r\n\r\nxref: https://github.com/kubernetes/release/issues/4237\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built using Go 1.25.6\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-23T13:34:20Z",
+      "merged_at": "2026-01-30T22:52:27Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "priority/critical-urgent",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "triage/accepted"
+      ]
+    },
+    "136634": {
+      "title": "Automated cherry pick of #136529: test: Read /proc/net/nf_conntrack instead of using conntrack binary\n#136554: test: Fix KubeProxy CLOSE_WAIT test for IPv6 environments (and where /proc/net/nf_conntrack may be missing)",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136634",
+      "body": "Cherry pick of #136529 #136554 on release-1.35.\n\n#136529: test: Read /proc/net/nf_conntrack instead of using conntrack binary\n#136554: test: Fix KubeProxy CLOSE_WAIT test for IPv6 environments (and where /proc/net/nf_conntrack may be missing)\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nNONE\r\nNONE\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-29T20:01:40Z",
+      "merged_at": "2026-01-29T22:41:51Z",
+      "author": "dims",
+      "labels": [
+        "area/test",
+        "priority/critical-urgent",
+        "sig/network",
+        "kind/cleanup",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {
+    "136027": {
+      "title": "Error-level logs incorrectly use verbosity levels",
+      "url": "https://github.com/kubernetes/kubernetes/issues/136027",
+      "body": "Currently, some components in Kubernetes have been migrated (or partially migrated) to [contextual logging](https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/3077-contextual-logging/README.md). However, an incorrect pattern was introduced during the migration: Error-level logs are being called with verbosity methods (e.g., .V()).\n\nThe underlying package go-logr/logr, which contextual logging relies on, ignores the verbosity level when printing Error-level logs. For example, in the statement `logger.V(8).Error(nil, \"Readiness probe already exists for container\", \"pod\", klog.KObj(pod), \"containerName\", c.Name)`, the error log will be printed regardless of the verbosity level set.\n\nThis can lead to error log flooding, which may hinder users' ability to review normal logs for troubleshooting. More critically, according to the [Kubernetes logging policy](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-instrumentation/logging.md#what-method-to-use), logs should only be recorded when the information requires action from an administrator. This directly contradicts the practice of setting verbosity levels for Error logs, as administrators using the default logging level might miss these actionable errors. Therefore, these instances need to be fixed.\n\nUsing grep, I identified the following instances in the k/k repository where verbosity levels are incorrectly set for Error logs.\n- [ ] /pkg/controller/garbagecollector https://github.com/kubernetes/kubernetes/pull/136040\n```\n./pkg/controller/garbagecollector/garbagecollector.go:363:\t\t\tlogger.V(5).Error(err, \"error syncing item\", \"item\", n.identity)\n./pkg/controller/garbagecollector/graph_builder.go:225:\t\tlogger.V(4).Error(err, \"unable to use a shared informer\", \"resource\", resource, \"kind\", kind)\n```\n- [ ] /pkg/controller/resourcequota https://github.com/kubernetes/kubernetes/pull/136040\n```\n./pkg/controller/resourcequota/resource_quota_monitor.go:178:\tlogger.V(4).Error(err, \"QuotaMonitor unable to use a shared informer\", \"resource\", resource.String())\n```\n- [x] /pkg/controller/storageversionmigrator/ https://github.com/kubernetes/kubernetes/pull/136046\n```\n./pkg/controller/storageversionmigrator/storageversionmigrator.go:227:\t\tlogger.V(4).Error(err, \"resource does not exist in our rest mapper\", \"gvr\", gvr.String())\n./pkg/controller/storageversionmigrator/storageversionmigrator.go:244:\t\tlogger.V(4).Error(errMonitor, \"resource does not exist in GC\", \"gvr\", gvr.String())\n./pkg/controller/storageversionmigrator/storageversionmigrator.go:311:\t\t\tlogger.V(4).Error(err, \"Unable to compare the resource version of the resource\", \"namespace\", accessor.GetNamespace(), \"name\", accessor.GetName(), \"gvr\", gvr.String(), \"accessorRV\", accessor.GetResourceVersion(), \"listResourceVersion\", listResourceVersion, \"error\", err.Error())\n./pkg/controller/storageversionmigrator/storageversionmigrator.go:361:\t\t\tlogger.V(4).Error(errPatch, \"Failed to migrate the resource\", \"namespace\", accessor.GetNamespace(), \"name\", accessor.GetName(), \"gvr\", gvr.String(), \"reason\", apierrors.ReasonForError(errPatch))\n```\n- [ ] ./pkg/controller/volume/ https://github.com/kubernetes/kubernetes/pull/136050\n```\n./pkg/controller/volume/selinuxwarning/selinux_warning_controller.go:458:\t\t\tlogger.V(4).Error(err, \"failed to get SELinux label\", \"pod\", klog.KObj(pod), \"volume\", mount)\n./pkg/controller/volume/selinuxwarning/selinux_warning_controller.go:514:\t\t\tlogger.V(2).Error(err, \"failed to get first pod for event\", \"pod\", conflict.Pod)\n```\n- [ ] ./pkg/kubelet/volumemanager/  https://github.com/kubernetes/kubernetes/pull/136033\n```\n./pkg/kubelet/volumemanager/cache/desired_state_of_world.go:673:\tlogger.V(4).Error(err, \"Please report this error in https://github.com/kubernetes/enhancements/issues/1710, together with full Pod yaml file\")\n./pkg/kubelet/volumemanager/cache/desired_state_of_world.go:688:\t\tlogger.V(4).Error(err, \"failed to get CSI driver name from volume spec\")\n./pkg/kubelet/volumemanager/reconciler/reconstruct.go:188:\t\tlogger.V(4).Error(fetchErr, \"Failed to get Node status to reconstruct device paths\")\n```\n\n\n- [x] ./pkg/kubelet https://github.com/kubernetes/kubernetes/pull/136028\n```\n./pkg/kubelet/stats/helper.go:502:\t\tlogger.V(6).Error(err, \"Unable to fetch pod log stats\", \"pod\", klog.KRef(podNs, podName))\n./pkg/kubelet/stats/helper.go:510:\t\tlogger.V(6).Error(err, \"Unable to fetch pod etc hosts stats\", \"pod\", klog.KRef(podNs, podName))\n./pkg/kubelet/stats/cri_stats_provider.go:168:\t\tlogger.V(5).Error(err,\n./pkg/kubelet/cm/devicemanager/plugin/v1beta1/client.go:107:\t\t\tlogger.V(2).Error(err, \"Failed to close grpc connection\", \"resource\", c.Resource())\n./pkg/kubelet/cm/dra/plugin/dra_plugin_manager.go:398:\t\t\t\t\tlogger.V(3).Error(err, \"Failed to establish WatchResources stream, will retry\")\n./pkg/kubelet/kuberuntime/kuberuntime_container_linux.go:431:\t\t\tlogger.V(5).Error(fmt.Errorf(\"failed to parse /proc/self/cgroup: %w\", err), warn)\n./pkg/kubelet/kuberuntime/kuberuntime_container_linux.go:442:\t\t\tlogger.V(5).Error(err, warn)\n./pkg/kubelet/lifecycle/handlers.go:85:\t\t\tlogger.V(1).Error(err, \"Exec lifecycle hook for Container in Pod failed\", \"execCommand\", handler.Exec.Command, \"containerName\", container.Name, \"pod\", klog.KObj(pod), \"message\", string(output))\n./pkg/kubelet/lifecycle/handlers.go:93:\t\t\tlogger.V(1).Error(err, \"HTTP lifecycle hook for Container in Pod failed\", \"path\", handler.HTTPGet.Path, \"containerName\", container.Name, \"pod\", klog.KObj(pod))\n./pkg/kubelet/lifecycle/handlers.go:101:\t\t\tlogger.V(1).Error(err, \"Sleep lifecycle hook for Container in Pod failed\", \"sleepSeconds\", handler.Sleep.Seconds, \"containerName\", container.Name, \"pod\", klog.KObj(pod))\n./pkg/kubelet/lifecycle/handlers.go:152:\t\tlogger.V(1).Error(err, \"HTTPS request to lifecycle hook got HTTP response, retrying with HTTP.\", \"pod\", klog.KObj(pod), \"host\", req.URL.Host)\n./pkg/kubelet/prober/prober_manager.go:197:\t\t\t\tlogger.V(8).Error(nil, \"Startup probe already exists for container\",\n./pkg/kubelet/prober/prober_manager.go:209:\t\t\t\tlogger.V(8).Error(nil, \"Readiness probe already exists for container\",\n./pkg/kubelet/prober/prober_manager.go:221:\t\t\t\tlogger.V(8).Error(nil, \"Liveness probe already exists for container\",\n./pkg/kubelet/prober/prober.go:106:\t\tlogger.V(1).Error(err, \"Probe errored\", \"probeType\", probeType, \"pod\", klog.KObj(pod), \"podUID\", pod.UID, \"containerName\", container.Name, \"probeResult\", result)\n./pkg/kubelet/metrics/collectors/cri_metrics.go:110:\t\tlogger.V(5).Error(err, \"Descriptor not present in pre-populated list of descriptors\", \"name\", m.Name)\n./pkg/kubelet/pleg/generic.go:300:\t\t\tg.logger.V(4).Error(err, \"PLEG: Ignoring events for pod\", \"pod\", klog.KRef(pod.Namespace, pod.Name))\n./pkg/kubelet/allocation/allocation_manager.go:576:\t\tlogger.V(3).Error(err, \"Failed to delete pod allocation\", \"podUID\", uid)\n```",
+      "state": "closed",
+      "created_at": "2026-01-05T11:02:56Z",
+      "closed_at": "2026-01-30T10:55:02Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "priority/important-soon",
+        "sig/node",
+        "sig/apps",
+        "help wanted",
+        "good first issue",
+        "triage/accepted"
+      ]
+    }
+  }
+}
