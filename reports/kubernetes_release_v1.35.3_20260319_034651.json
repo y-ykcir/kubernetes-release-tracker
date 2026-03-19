@@ -1,0 +1,125 @@
+{
+  "metadata": {
+    "generated_at": "2026-03-19T03:47:12.186161",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.3",
+    "name": "v1.35.3",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-03-19T03:20:52Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.3",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.3 是一个补丁版本，主要修复了 kubeadm 在 etcd 成员管理和节点卸载过程中的两个关键 Bug，提升了集群操作的稳定性和可靠性。",
+    "key_changes": [],
+    "important_bugfixes": [
+      "修复 kubeadm 将 etcd learner 成员错误地添加到客户端端点列表的问题 - [PR #137257](https://github.com/kubernetes/kubernetes/pull/137257) - **影响：** 在 etcd 集群中使用 learner 成员时，kubeadm 生成的配置可能导致 API 服务器等组件连接到无效的 learner 端点，从而引发连接失败和控制平面不稳定。此修复确保了客户端仅连接到有投票权的成员。",
+      "修复 kubeadm 在节点卸载阶段因遇到 EINVAL 错误而失败的问题 - [PR #137569](https://github.com/kubernetes/kubernetes/pull/137569) - **影响：** 在某些情况下（例如对已卸载的目录重复执行操作），`kubeadm reset` 或节点清理过程可能因系统调用返回 EINVAL 错误而意外中断，阻塞正常的集群维护或升级流程。此修复通过忽略该特定错误，使流程能够继续执行。",
+      "修复 DRA（动态资源分配）设备污点驱逐控制器状态报告可能不准确的问题 - [PR #137047](https://github.com/kubernetes/kubernetes/pull/137047) - **影响：** 这是一个测试稳定性修复（Flake），主要影响单元测试的可靠性。在生产环境中，DRA 控制器在极短时间内可能报告一个稍显混乱的中间状态日志，但最终会达到正确状态。此修复通过延迟状态更新来避免混淆，提升了代码健壮性。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [],
+    "breaking_changes": [],
+    "recommendations": [
+      "**建议升级：** 对于所有使用 kubeadm 搭建或维护的 1.35 集群，特别是那些在 `kubeadm reset` 或涉及 etcd 操作时遇到问题的环境，建议安排升级到此版本。",
+      "**升级前检查：** 尽管是低风险补丁，升级前仍建议对集群状态（特别是 etcd 健康状态）和关键工作负载进行备份或检查。"
+    ],
+    "risk_assessment": "整体风险评估：**极低**。此版本仅包含针对特定场景的 Bug 修复，不涉及 API 变更、功能废弃或架构调整。升级风险极小，是推荐的安全升级。建议在常规维护窗口内进行升级。需要特别关注升级后 `kubeadm reset` 等命令的行为是否符合预期。"
+  },
+  "statistics": {
+    "analyzed_prs": 3,
+    "analyzed_issues": 0,
+    "important_items": 2
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#137257: Automated cherry pick of #137251: kubeadm: do not add learner member to etcd client endpoints",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#137569: [release-1.35] cmd/kubeadm: ignore EINVAL error during unmount",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Performance related; Deprecation"
+    }
+  ],
+  "prs": {
+    "137257": {
+      "title": "Automated cherry pick of #137251: kubeadm: do not add learner member to etcd client endpoints",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137257",
+      "body": "Cherry pick of #137251 on release-1.35.\n\n#137251: kubeadm: do not add learner member to etcd client endpoints\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: do not add learner member to etcd client endpoints\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-02-26T10:30:14Z",
+      "merged_at": "2026-03-11T09:31:44Z",
+      "author": "ahrtr",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "137569": {
+      "title": "[release-1.35] cmd/kubeadm: ignore EINVAL error during unmount",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137569",
+      "body": "\r\n\r\n<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nIf /var/lib/kubelet is MS_SHARED mountpoint, all the mountpoints under /var/lib/kubelet will have duplicate one. When `kubeadm reset -f` is executed, it will try to umount one path twice. However, they are in the peer group. Once we umount one path, the duplicate one will be umounted as well. So, in this case, we should ignore EINVAL error.\r\n\r\n\r\n(cherry picked from commit 2634261c175cf1c5960a808708728fb51df9f8ed)\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkubeadm: ignore EINVAL when unmounting /var/lib/kubelet peer mounts during reset\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-09T14:16:49Z",
+      "merged_at": "2026-03-11T13:43:38Z",
+      "author": "fuweid",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "137047": {
+      "title": "[release-1.35]Automated cherry pick of #135611: Fix flake TestDeviceTaintRule test",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137047",
+      "body": "Cherry pick of #135611 on release-1.35.\n\n#135611: Fix flake TestDeviceTaintRule test\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nDRA device taint eviction: the controller might have reported \"1 pod needs to be evicted in 1 namespace. 1 pod evicted since starting the controller.\" when only a single pod is involved, depending on timing (pod evicted, informer cache not updated yet). It would eventually arrive at the correct \"1 pod evicted since starting the controller.\", but now it tries harder to avoid the confusing intermediate state by delaying the status update after eviction.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-02-16T09:59:47Z",
+      "merged_at": "2026-03-11T09:31:36Z",
+      "author": "vikasbolla",
+      "labels": [
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "kind/flake",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {}
+}
