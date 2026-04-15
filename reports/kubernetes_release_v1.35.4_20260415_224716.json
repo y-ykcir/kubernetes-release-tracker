@@ -1,0 +1,255 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-15T22:47:45.507678",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.4",
+    "name": "v1.35.4",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-04-15T21:54:01Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.4",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.4 是一个关键的补丁版本，主要修复了 v1.35 系列中几个严重的回归性问题，特别是 StatefulSet 滚动更新卡死和 sidecar 容器导致的 Pod 重启故障，建议所有运行 v1.35 的生产集群尽快升级。",
+    "key_changes": [
+      "修复 StatefulSet `MaxUnavailable` 功能回归，默认将其关闭以避免 Pod 版本卡死 - [PR #137926](https://github.com/kubernetes/kubernetes/pull/137926) - **影响：** 启用了 `MaxUnavailableStatefulSet` 功能的集群，在 Pod 首次启动失败时，滚动更新会完全卡住，无法恢复。",
+      "修复 kubelet 重启后，带有 sidecar 和 startupProbe 的 Pod 中普通容器崩溃后无法重启的问题 - [PR #137885](https://github.com/kubernetes/kubernetes/pull/137885) - **影响：** 受影响的 Pod 会一直处于 `RestartCount: 0` 的假死状态，导致服务不可用。",
+      "修复 kube-proxy 在 nftables 1.1.3 系统上的兼容性问题 - [PR #137807](https://github.com/kubernetes/kubernetes/pull/137807) - **影响：** 使用 nftables 后端的 kube-proxy 在新版系统上无法正常工作，导致 Service 网络故障。",
+      "修复审计日志中请求延迟注解在请求超过 500ms 时计算错误的问题 - [PR #136281](https://github.com/kubernetes/kubernetes/pull/136281) - **影响：** 影响从 v1.34 开始的版本，导致审计日志中的延迟指标不准确，影响监控和排障。",
+      "修复 kubelet 重启后设备插件准入失败的问题 - [PR #138042](https://github.com/kubernetes/kubernetes/pull/138042) - **影响：** 使用 GPU、FPGA 等设备插件的 Pod 在 kubelet 重启后可能无法被正确调度和启动。"
+    ],
+    "important_bugfixes": [
+      "修复 StatefulSet 滚动更新卡死：当 `MaxUnavailableStatefulSet` 功能启用且 Pod 的第一个版本有缺陷时，控制器无法更新 Pod 版本，导致滚动更新永久卡住 - [PR #137926](https://github.com/kubernetes/kubernetes/pull/137926) - **影响：** 生产环境中 StatefulSet 的滚动部署会失败，服务无法更新。",
+      "修复 Sidecar 容器阻止重启：在包含 `restartPolicy: Always` 的 initContainer (sidecar) 且配置了 `startupProbe` 的 Pod 中，kubelet 重启后普通容器崩溃无法重启 - [PR #137885](https://github.com/kubernetes/kubernetes/pull/137885) - **影响：** 关键工作负载（如使用了 sidecar 模式的 Istio 服务网格）可能因容器崩溃而无法自动恢复，导致服务中断。",
+      "修复 kube-proxy nftables 兼容性：修复了 kube-proxy 在 nftables 1.1.3 版本系统上的运行问题 - [PR #137807](https://github.com/kubernetes/kubernetes/pull/137807) - **影响：** 升级了系统 nftables 版本的节点，其上的 Service 流量会全部失效。",
+      "修复设备插件测试失败/准入失败：解决 kubelet 重启后，依赖于设备插件（如 NVIDIA GPU）的容器可能无法通过准入检查的问题 - [PR #138042](https://github.com/kubernetes/kubernetes/pull/138042) - **影响：** AI/ML 或高性能计算等依赖特殊硬件的工作负载可靠性降低。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "基础镜像和编译工具链升级：将构建所用的 Go 版本升级至 1.25.9，并更新 distroless iptables 镜像 - [PR #138304](https://github.com/kubernetes/kubernetes/pull/138304) - **提升：** 包含 Go 语言的安全补丁和运行时改进，可能带来潜在的性能和稳定性提升。"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "**立即升级**：如果您正在运行 Kubernetes v1.35.0 到 v1.35.3，强烈建议尽快安排升级到 v1.35.4，以修复可能导致服务中断的严重回归性 Bug。",
+      "**重点验证**：升级后，请重点测试：1) StatefulSet 的滚动更新流程；2) 使用了 `sidecar` 容器模式且带有 `startupProbe` 的 Pod 的故障恢复能力；3) 节点网络（Service）功能。",
+      "**功能标志注意**：`MaxUnavailableStatefulSet` 功能在此版本中已被**默认禁用**。如果您之前显式启用了此功能并依赖其行为，升级后该功能将失效，需要重新评估。相关 Issue 描述了其风险 - [Issue #137409](https://github.com/kubernetes/kubernetes/issues/137409)。",
+      "**监控审计日志**：如果您依赖审计日志中的 `requestReceivedTimestamp` 和 `stageTimestamp` 注解来计算 API 延迟，升级后相关数据将恢复准确。"
+    ],
+    "risk_assessment": "**整体风险评估：中高**。此版本修复了多个具有高破坏性的回归性 Bug，特别是影响 StatefulSet 和 Pod 自愈能力的缺陷。**不升级的风险远大于升级的风险**。升级本身是低风险的补丁版本更新，但修复的问题直接影响核心控制器（StatefulSet）和节点组件（kubelet， kube-proxy）的稳定性。**建议升级时机**：应在下一个维护窗口立即安排升级。**需要特别关注的方面**：升级后观察 StatefulSet 工作负载的状态，并确认所有使用设备插件的工作负载调度正常。"
+  },
+  "statistics": {
+    "analyzed_prs": 6,
+    "analyzed_issues": 1,
+    "important_items": 7
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#136281: Automated cherry pick of #135685: Bugfix: calculate request latency properly in audit log filter",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#137807: Automated cherry pick of #137501: Fix kube-proxy on systems with nft 1.1.3 (take 2)",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#137885: Automated cherry pick of #137146: kubelet: fix containers not restarting when sidecar keeps running",
+      "reason": "Contains 'crash'; Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#137926: Automated cherry pick of #137904: KEP-961: demote maxUnavailable feature in statefulset to off by default",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#138042: Automated cherry pick of #135485: Fix device plugin admission failure after container restart",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138304: [release-1.35] Bump images and versions to go 1.25.9 and distroless iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#137409: StatefulSet pod revisions not updated when MaxUnavailableStatefulSet enabled",
+      "reason": "Contains 'crash'; Has label 'kind/bug'; Has label 'priority/critical-urgent'; Has label 'kind/regression'; Potential crash issue"
+    }
+  ],
+  "prs": {
+    "136281": {
+      "title": "Automated cherry pick of #135685: Bugfix: calculate request latency properly in audit log filter",
+      "url": "https://github.com/kubernetes/kubernetes/pull/136281",
+      "body": "Cherry pick of #135685 on release-1.35.\r\n\r\n#135685: Bugfix: calculate request latency properly in audit log filter\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFixes a 1.34+ regression reporting apiserver request latency annotation in the audit log when request took more than 500ms \r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-01-16T17:54:28Z",
+      "merged_at": "2026-03-26T18:58:24Z",
+      "author": "chaochn47",
+      "labels": [
+        "kind/bug",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "137807": {
+      "title": "Automated cherry pick of #137501: Fix kube-proxy on systems with nft 1.1.3 (take 2)",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137807",
+      "body": "Cherry pick of #137501 on release-1.35.\n\n#137501: Fix kube-proxy on systems with nft 1.1.3 (take 2)\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixes kube-proxy's nftables mode to work on systems with nft 1.1.3.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-17T12:05:28Z",
+      "merged_at": "2026-03-19T12:34:32Z",
+      "author": "danwinship",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "area/dependency",
+        "needs-triage"
+      ]
+    },
+    "137885": {
+      "title": "Automated cherry pick of #137146: kubelet: fix containers not restarting when sidecar keeps running",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137885",
+      "body": "Cherry pick of #137146 on release-1.35.\n\n#137146: kubelet: fix containers not restarting when sidecar keeps running\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\nFixed a bug where, after a kubelet restart, regular containers in a pod with a\nsidecar (initContainer with restartPolicy: Always) and a startupProbe failed\nto restart after crashing. Affected pods remained stuck with RestartCount: 0\nindefinitely.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-19T11:08:54Z",
+      "merged_at": "2026-03-20T20:00:15Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "137926": {
+      "title": "Automated cherry pick of #137904: KEP-961: demote maxUnavailable feature in statefulset to off by default",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137926",
+      "body": "Cherry pick of #137904 on release-1.35.\r\n\r\nxref https://github.com/kubernetes/kubernetes/issues/137409\r\n\r\n#137904: KEP-961: demote maxUnavailable feature in statefulset to off by default\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n#### What type of PR is this?\r\n/kind bug\r\n/kind regression\r\n\r\n\r\n```release-note\r\nFixes a 1.35 regression in StatefulSet Parallel pod management by disabling the MaxUnavailableStatefulSet feature by default.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-20T07:55:07Z",
+      "merged_at": "2026-04-09T12:20:21Z",
+      "author": "soltysh",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "138042": {
+      "title": "Automated cherry pick of #135485: Fix device plugin admission failure after container restart",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138042",
+      "body": "Cherry pick of #135485 on release-1.35.\r\n\r\n#135485: Fix device plugin admission failure after container restart\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n```release-note\r\nFixed device plugin test failures after kubelet restart.\r\n```\r\n\r\nNow the cherry pick also included squashed commit of https://github.com/kubernetes/kubernetes/commit/448fa19b8e9a567a257ec8740ddc444ac41f25ba and\r\nhttps://github.com/kubernetes/kubernetes/commit/e809602da59d90fe46c696ad48beb38862c5381b",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-26T19:31:12Z",
+      "merged_at": "2026-04-09T23:08:18Z",
+      "author": "zxqlxy",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "ok-to-test",
+        "needs-triage"
+      ]
+    },
+    "138304": {
+      "title": "[release-1.35] Bump images and versions to go 1.25.9 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138304",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to go 1.25.9 and distroless iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nxref https://github.com/kubernetes/release/issues/4365\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nKubernetes is now built using Go 1.25.9\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n```docs\r\n\r\n```\r\n\r\n/assign @dims @Verolop @cpanato \r\ncc @kubernetes/release-engineering ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-09T19:53:41Z",
+      "merged_at": "2026-04-09T20:58:19Z",
+      "author": "xmudrii",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {
+    "137409": {
+      "title": "StatefulSet pod revisions not updated when MaxUnavailableStatefulSet enabled",
+      "url": "https://github.com/kubernetes/kubernetes/issues/137409",
+      "body": "### What happened?\n\nI decided to open this issue after investigating https://github.com/stackabletech/trino-operator/issues/854.\n\nThe high level description of the problem is that the stateful set controller doesn't update the pods according to the latest STS revision and the pods are left crashlooping **if the first revision is faulty** and can never become available. This doesn't happen if the `MaxUnavailableStatefulSet` feature is disabled.\n\nUnfortunately I cannot create a much simpler example, but I attach the relevant controller log messages below.\n\nBased on these logs you can see that:\n\n1. The Stackable Operator for Trino (`trino-op` from now on) creates two `StatefulSet` objects with a single replica. They both expose the same problem, so for simplicity, I will use only one of them from now on (`trino-coordinator-default`).\n2. The initial revision of this sts is `trino-coordinator-default-5f5598d4c8`. This first STS  revision has a faulty command args  and can never become available.\n3. The `trino-op` updates the sts rapidly to the revision `trino-coordinator-default-787556ff59`. Now the STS command args are correct and the pods should be able to become ready.\n4. The pod created initially is never updated so it never becomes ready.\n\nTo summarize my understanding, the sts revision is never updated if the pod never becomes ready, and the pod doesn't become ready because it has an old revision.\n\nIn the logs you see that `currentRevision` is never the same as `updateRevision`:\n\n```\nI0304 15: 25:06.514308       1 stateful_set_control.go: 146]\"StatefulSet revisions\" statefulSet = \"kuttl-test-distinct-turtle/trino-coordinator-default\" currentRevision = \"trino-coordinator-default-5f5598d4c8\" updateRevision = \"trino-coordinator-default-787556ff59\"\n```\n\n### What did you expect to happen?\n\nThe pod should become ready according to the `updateRevision` of the sts.\nAgain, this was indeed the case until `MaxUnavailableStatefulSet` feature gate was enabled.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nI can reproduce this bug using the `trino-op` but unfortunately I don't have a minimal example.\n\n### Anything else we need to know?\n\nAttached are the relevant kube controller logs.\n\n[kobe-controller-logs.txt](https://github.com/user-attachments/files/25745670/kobe-controller-logs.txt)\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nClient Version: v1.34.0\nKustomize Version: v5.7.1\nServer Version: v1.35.1\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\n\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\nNAME=\"Fedora Linux\"\nVERSION=\"43 (Workstation Edition)\"\nRELEASE_TYPE=stable\nID=fedora\nVERSION_ID=43\nVERSION_CODENAME=\"\"\nPRETTY_NAME=\"Fedora Linux 43 (Workstation Edition)\"\nANSI_COLOR=\"0;38;2;60;110;180\"\nLOGO=fedora-logo-icon\nCPE_NAME=\"cpe:/o:fedoraproject:fedora:43\"\nDEFAULT_HOSTNAME=\"fedora\"\nHOME_URL=\"https://fedoraproject.org/\"\nDOCUMENTATION_URL=\"https://docs.fedoraproject.org/en-US/fedora/f43/\"\nSUPPORT_URL=\"https://ask.fedoraproject.org/\"\nBUG_REPORT_URL=\"https://bugzilla.redhat.com/\"\nREDHAT_BUGZILLA_PRODUCT=\"Fedora\"\nREDHAT_BUGZILLA_PRODUCT_VERSION=43\nREDHAT_SUPPORT_PRODUCT=\"Fedora\"\nREDHAT_SUPPORT_PRODUCT_VERSION=43\nSUPPORT_END=2026-12-02\nVARIANT=\"Workstation Edition\"\nVARIANT_ID=workstation\n\n$ uname -a\nLinux fedora.fritz.box 6.18.13-200.fc43.x86_64 #1 SMP PREEMPT_DYNAMIC Thu Feb 19 19:54:01 UTC 2026 x86_64 GNU/Linux\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "open",
+      "created_at": "2026-03-04T16:26:55Z",
+      "closed_at": null,
+      "author": "razvan",
+      "labels": [
+        "kind/bug",
+        "priority/critical-urgent",
+        "sig/apps",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    }
+  }
+}
