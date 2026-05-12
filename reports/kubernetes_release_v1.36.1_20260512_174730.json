@@ -1,0 +1,311 @@
+{
+  "metadata": {
+    "generated_at": "2026-05-12T17:48:14.336673",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.36.1",
+    "name": "v1.36.1",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md) for more details.\n\n\n\n",
+    "published_at": "2026-05-12T16:39:25Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.36.1",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.36.1 是一个紧急补丁版本，主要修复了 v1.36.0 中导致 kubelet 在 ZFS 文件系统上崩溃、Windows 网络 DNS 超时以及大集群模式下 kube-proxy 性能退化等关键回归问题。",
+    "key_changes": [
+      "修复 kubelet 在 ZFS 文件系统上因 cAdvisor 插件缺失而无法启动的严重回归 - [PR #138590](https://github.com/kubernetes/kubernetes/pull/138590)",
+      "修复 Windows L2Bridge 网络中因 IP 重用导致 DNS 超时的网络问题 - [PR #138603](https://github.com/kubernetes/kubernetes/pull/138603)",
+      "优化 kube-proxy 在大集群模式（>1000 endpoints）下避免执行全量同步的性能问题 - [PR #138635](https://github.com/kubernetes/kubernetes/pull/138635)",
+      "改进 kubeadm 对 etcd 集群的健康检查逻辑，采用法定人数而非全部成员健康 - [PR #138538](https://github.com/kubernetes/kubernetes/pull/138538)",
+      "修复 kubeadm init 阶段因负载均衡器延迟就绪导致的 API 调用问题 - [PR #138682](https://github.com/kubernetes/kubernetes/pull/138682)",
+      "修复 kubeadm join worker 节点时不必要的 LocalAPIEndpoint 默认设置 - [PR #138802](https://github.com/kubernetes/kubernetes/pull/138802)",
+      "修复动态资源分配（DRA）元数据解析器对未知 API 版本的处理逻辑 - [PR #138859](https://github.com/kubernetes/kubernetes/pull/138859)",
+      "为 kube-apiserver 的 kubelet 客户端使用专用的 ClusterRole 以提升权限隔离 - [PR #138958](https://github.com/kubernetes/kubernetes/pull/138958)"
+    ],
+    "important_bugfixes": [
+      "修复 ZFS 支持回归：在 v1.36.0 中，如果 `/var/lib/kubelet` 目录位于 ZFS 文件系统上，kubelet 将因 cAdvisor 插件缺失而无法启动 - [PR #138590](https://github.com/kubernetes/kubernetes/pull/138590) - **影响：** 使用 ZFS 的节点将完全不可用，导致 Pod 调度失败和节点失联。",
+      "修复 Windows 网络端点清理：当 Pod IP 在 L2Bridge 网络的不同节点间复用时，未能清理陈旧的远程 HNS 端点，导致流量被错误路由和 DNS 超时 - [PR #138603](https://github.com/kubernetes/kubernetes/pull/138603) - **影响：** Windows 节点上的 Pod 网络连接不稳定，特别是 DNS 解析会间歇性失败。",
+      "修复 kube-proxy 性能退化：在大型集群模式下，kube-proxy 错误地执行了全量同步操作，增加了不必要的 CPU 和网络开销 - [PR #138635](https://github.com/kubernetes/kubernetes/pull/138635) - **影响：** 大型集群的控制平面和节点网络性能下降，可能影响服务发现和负载均衡的响应速度。",
+      "修复 kubeadm etcd 健康检查过于严格：原先要求所有 etcd 成员健康，现在采用法定人数原则，允许在部分成员不健康时仍能通过检查 - [PR #138538](https://github.com/kubernetes/kubernetes/pull/138538) - **影响：** 在 etcd 集群部分成员临时故障时，kubeadm 操作（如升级）可能被不必要的阻塞。",
+      "修复 kubeadm init 对延迟负载均衡器的兼容性：在 init 阶段，使用本地 API 端点而非控制平面端点来构造内存中的 kubeconfig - [PR #138682](https://github.com/kubernetes/kubernetes/pull/138682) - **影响：** 在云环境或外部负载均衡器配置延迟的场景下，`kubeadm init` 可能失败。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "kube-proxy 大集群模式优化：避免在 endpoints 数量超过 1000 时进行全量同步，减少不必要的计算和网络流量 - [PR #138635](https://github.com/kubernetes/kubernetes/pull/138635) - **提升：** 显著降低大型集群中 kube-proxy 的周期性资源消耗，提升网络平面的稳定性。",
+      "恢复 cAdvisor 对 ZFS 文件系统的支持：解决因缺失插件导致的 kubelet 启动失败和存储容量监控失效问题 - [PR #138590](https://github.com/kubernetes/kubernetes/pull/138590) - **提升：** 确保 ZFS 节点正常运行并恢复准确的临时存储（ephemeral storage）监控能力。"
+    ],
+    "breaking_changes": [
+      "无新增的破坏性变更。此版本主要修复 v1.36.0 的回归问题。但请注意，从 v1.36.0 升级到 v1.36.1 是修复这些回归问题的必要步骤。"
+    ],
+    "recommendations": [
+      "**强烈建议所有正在运行或计划部署 Kubernetes v1.36.0 的集群立即升级到 v1.36.1。** 特别是：1) 使用 ZFS 文件系统的节点；2) 包含 Windows 节点的集群；3) 大型集群（endpoints > 1000）。",
+      "升级前，请确保已备份关键组件配置和 etcd 数据。对于生产集群，建议先在测试环境中验证升级流程。",
+      "如果您的集群使用 kubeadm 且 etcd 集群处于非完全健康状态，此版本修复后，`kubeadm upgrade` 等操作的成功率会提高。",
+      "关注节点（尤其是 Windows 节点）升级后的网络连通性测试，特别是跨节点 Pod 通信和 DNS 解析功能。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。这是一个针对 v1.36.0 严重回归问题的补丁版本，修复了导致节点不可用和网络故障的核心缺陷，升级收益远大于风险。建议的升级时机：**尽快安排**，特别是受影响的集群。需要特别关注的方面：升级后验证 ZFS 节点上的 kubelet 状态、Windows 节点的网络功能以及大型集群中 kube-proxy 的负载是否恢复正常。"
+  },
+  "statistics": {
+    "analyzed_prs": 8,
+    "analyzed_issues": 1,
+    "important_items": 9
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138538: Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138590: release-1.36: re-introduce cadvisor ZFS support to kubelet",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/regression'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#138603: Automated cherry pick of #138000: Delete remote endpoint if it has same ip as local endpoint in the system.",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#138635: Automated cherry pick of #138571: kube-proxy: don't do full periodic syncs on large cluster mode",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138682: Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138802: Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138859: Automated cherry pick of #138530: KEP-5304:  DecodeMetadataFromStream only skips metadata entries with unknown API versions",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138958: Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#138556: kubelet does not start when kubelet folder is on ZFS filesystem because of missing cadvisor plugin in 1.36.0",
+      "reason": "Contains 'crash'; Has label 'kind/bug'; Potential crash issue; Performance related"
+    }
+  ],
+  "prs": {
+    "138538": {
+      "title": "Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138538",
+      "body": "Cherry pick of #138403 on release-1.36.\n\n#138403: kubeadm: Evaluate etcd cluster health using quorum\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: when checking the etcd cluster status use a quorum approach, instead of considering the health of all members. This would allow the check to not fail if there are sufficient healthy voting members.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-23T08:14:38Z",
+      "merged_at": "2026-04-23T13:16:49Z",
+      "author": "ahrtr",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138590": {
+      "title": "release-1.36: re-introduce cadvisor ZFS support to kubelet",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138590",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind regression\r\n\r\n#### What this PR does / why we need it:\r\n\r\nCherry-picks https://github.com/kubernetes/kubernetes/pull/138587 onto release-1.36\r\n\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nhttps://github.com/kubernetes/kubernetes/issues/138556\r\n\r\n#### Special notes for your reviewer:\r\n\r\n- The first commit is a clean cherry-pick\r\n- The second commit is auto-generated by `hack/update-vendor.sh` (this is also why the commits were split, that type of change does not cherry-pick cleanly, so we re-generated it instead)\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFixed kubelet failure starting on ZFS due to missing cadvisor plugin.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n/cc @dims\r\n/sig node",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-25T04:43:53Z",
+      "merged_at": "2026-05-08T18:25:20Z",
+      "author": "BenTheElder",
+      "labels": [
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "138603": {
+      "title": "Automated cherry pick of #138000: Delete remote endpoint if it has same ip as local endpoint in the system.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138603",
+      "body": "Cherry pick of #138000 on release-1.36.\n\n#138000: Delete remote endpoint if it has same ip as local endpoint in the system.\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed stale remote HNS endpoint cleanup on Windows when a pod IP is reused across nodes in L2Bridge networks, preventing DNS timeouts caused by traffic being routed to the wrong node.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-26T09:55:28Z",
+      "merged_at": "2026-05-05T02:32:22Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/XL",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138635": {
+      "title": "Automated cherry pick of #138571: kube-proxy: don't do full periodic syncs on large cluster mode",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138635",
+      "body": "Cherry pick of #138571 on release-1.36.\n\n#138571: kube-proxy: don't do full periodic syncs on large cluster mode\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkube-proxy does not perform full-sync operations when operation in large cluster mode (more than 1000 endpoints)\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-28T07:49:40Z",
+      "merged_at": "2026-05-06T01:10:21Z",
+      "author": "aojea",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138682": {
+      "title": "Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138682",
+      "body": "Cherry pick of #138449 on release-1.36.\n\n#138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: during 'kubeadm init', if the default 'admin.conf' and 'super-admin.conf' paths are used, load the files, but construct in memory kubeconfigs that point to the InitConfiguration.localAPIEndpoint instead of the ClusterConfiguration.controlPlaneEndpoint. This would resolve issues with delayed load balancers which are provisioned only after the first kube-apiserver instance starts.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-29T15:35:39Z",
+      "merged_at": "2026-05-05T15:04:23Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138802": {
+      "title": "Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138802",
+      "body": "Cherry pick of #138692 on release-1.36.\n\n#138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: skip LocalAPIEndpoint defaulting on 'kubeadm join' for worker nodes.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-06T09:08:27Z",
+      "merged_at": "2026-05-08T11:55:17Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138859": {
+      "title": "Automated cherry pick of #138530: KEP-5304:  DecodeMetadataFromStream only skips metadata entries with unknown API versions",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138859",
+      "body": "Cherry pick of #138530 on release-1.36.\n\n#138530: KEP-5304:  DecodeMetadataFromStream only skips metadata entries with unknown API versions\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nDRA metadata read helper (KEP-5304): on decode skip only if version is unknown, return error if object/file is malformed\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-07T13:25:58Z",
+      "merged_at": "2026-05-08T15:35:27Z",
+      "author": "alaypatel07",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "138958": {
+      "title": "Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138958",
+      "body": "Cherry pick of #138957 on release-1.36.\n\n#138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: use a dedicated ClusterRole 'system:kubelet-api-admin' for the kube-apiserver kubelet client.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-11T09:25:27Z",
+      "merged_at": "2026-05-11T12:23:51Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {
+    "138556": {
+      "title": "kubelet does not start when kubelet folder is on ZFS filesystem because of missing cadvisor plugin in 1.36.0",
+      "url": "https://github.com/kubernetes/kubernetes/issues/138556",
+      "body": "### What happened?\n\nAfter upgrading to Kubernetes 1.36.0, the kubelet crashes directly after startup on systems that have the `/var/lib/kubelet` folder configured on a ZFS filesystem. The direct error shown in the logs is:\n\n```\nE0423 21:45:14.682963  326484 kubelet.go:1821] \"Failed to start ContainerManager\" err=\"failed to get rootfs info: failed to get device for dir \\\"/var/lib/kubelet\\\": with major: 0, minor: 60: could not find device in cached partitions map\"\n```\n\nThis error is caused by the kubelet not being able to determine the available space for empheral storage, which it normally gets using cadvisor.\n\nAfter increasing the log level, it seems that this is caused by cadvisor not having access to its ZFS plugin:\n```\nApr 23 21:45:14 strike01 kubelet[326484]: I0423 21:45:14.680361  326484 fs.go:406] no plugin found for filesystem type: zfs\n```\n\n### What did you expect to happen?\n\nLike Kubernetes 1.35.3 (or 1.35.4 for that matter): I expect the kubelet to startup and work.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nAs described above: Ensure `/var/lib/kubelet` is on a ZFS filesystem and start the kubelet with any configuration.\n\n### Anything else we need to know?\n\nI am aware that Kubernetes does not maintain cadvisor and that cadvisor bugs should not be posted here. However, I believe that cadvisor is working correctly, it is just missing its ZFS plugin.\n\nFS plug-ins in cadvisor are introduced in version v0.55.0, before the introduction everything was built-in. Kubernetes 1.36.0 brings cadvisor from version [v0.53.0 → v0.56.0](https://github.com/google/cadvisor/compare/v0.53.0...v0.56.0). It was specifically introduced in https://github.com/google/cadvisor/commit/28ecaa9d9b4aa2ea878f7692a315797c2a9d7a7c\n\nIn the PR merging 0.55.1, #135829, I see that some file system extensions are specifically being imported (https://github.com/kubernetes/kubernetes/pull/135829/changes#diff-ca41d4fa89358cfbf866e71de1c54ab978a448e805495bf8bca923d85dae31fb), but the ZFS plug-in is missing.\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nClient Version: v1.36.0\nKustomize Version: v5.8.1\nServer Version: v1.36.0\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\n\nN/A, `kubeadm` cluster on bare metal\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\nPRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n\n$ uname -a\nLinux strike01 6.8.0-38-generic #38-Ubuntu SMP PREEMPT_DYNAMIC Fri Jun  7 15:25:01 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n`kubeadm`\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\ncontainerd 2.2.1\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\nN/A\n</details>\n",
+      "state": "closed",
+      "created_at": "2026-04-23T20:00:17Z",
+      "closed_at": "2026-04-25T03:32:46Z",
+      "author": "RemcodM",
+      "labels": [
+        "kind/bug",
+        "sig/node",
+        "triage/accepted"
+      ]
+    }
+  }
+}
