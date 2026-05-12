@@ -1,0 +1,287 @@
+{
+  "metadata": {
+    "generated_at": "2026-05-12T15:48:35.508943",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.5",
+    "name": "v1.35.5",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-05-12T15:37:25Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.5",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.5 是一个补丁版本，主要包含针对调度器、kube-proxy、kubeadm 和 Windows 网络的多个关键 Bug 修复，旨在提升集群的稳定性、性能和可靠性，无新增功能或破坏性变更。",
+    "key_changes": [
+      "调度器修复了因 Pod 重建导致的内存泄漏问题 - [PR #138434](https://github.com/kubernetes/kubernetes/pull/138434)",
+      "kube-proxy 在大集群模式下优化，避免不必要的全量同步 - [PR #138636](https://github.com/kubernetes/kubernetes/pull/138636)",
+      "kubeadm 改进 etcd 集群健康检查逻辑，使用法定人数而非全部成员 - [PR #138539](https://github.com/kubernetes/kubernetes/pull/138539)",
+      "修复 Windows L2Bridge 网络下 Pod IP 重用导致的 DNS 超时问题 - [PR #138602](https://github.com/kubernetes/kubernetes/pull/138602)",
+      "kubeadm 在 `init` 阶段使用 `localAPIEndpoint` 以解决负载均衡器延迟问题 - [PR #138683](https://github.com/kubernetes/kubernetes/pull/138683)",
+      "kubeadm 为 API Server 的 kubelet 客户端使用专用 ClusterRole - [PR #138959](https://github.com/kubernetes/kubernetes/pull/138959)"
+    ],
+    "important_bugfixes": [
+      "修复调度器内存泄漏：当 Pod 在调度失败期间被同名 Pod 替换时，会导致 `inFlightPods` 状态泄漏和无限增长 - [PR #138434](https://github.com/kubernetes/kubernetes/pull/138434) - **影响：** 长期运行可能导致调度器内存使用量不断上升，影响调度性能。",
+      "修复 Windows 网络端点清理：当 Pod IP 在 L2Bridge 网络的不同节点间复用时，陈旧的远程 HNS 端点未被清理 - [PR #138602](https://github.com/kubernetes/kubernetes/pull/138602) - **影响：** 导致流量被错误路由，引发 DNS 超时和服务中断，影响 Windows 节点上的 Pod 网络。",
+      "修复 kubeadm etcd 健康检查：原先要求所有 etcd 成员健康，现在采用法定人数原则 - [PR #138539](https://github.com/kubernetes/kubernetes/pull/138539) - **影响：** 在部分 etcd 成员临时不健康（如重启）时，`kubeadm` 操作（如升级）可能失败，现在更符合高可用逻辑。",
+      "修复 kubeadm `init` 阶段的 API 端点配置：确保使用 `localAPIEndpoint` 而非 `controlPlaneEndpoint` 进行初始 API 调用 - [PR #138683](https://github.com/kubernetes/kubernetes/pull/138683) - **影响：** 解决了在负载均衡器（如云厂商 LB）延迟配置时，`kubeadm init` 可能失败的问题。",
+      "修复 Pod 启动延迟指标：`kubelet_pod_start_sli_duration_seconds_bucket` 现在正确排除了 init 容器运行时间、镜像拉取时间等 - [PR #138153](https://github.com/kubernetes/kubernetes/pull/138153) - **影响：** 该 SLI/SLO 监控指标现在更准确，基于不准确指标的告警可能需要调整阈值。",
+      "修复 kubeadm worker 节点加入：跳过对 worker 节点 `LocalAPIEndpoint` 的默认值设置 - [PR #138803](https://github.com/kubernetes/kubernetes/pull/138803) - **影响：** 避免在 worker 节点加入时产生不必要的配置或潜在错误。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "kube-proxy 性能优化：在大型集群模式（端点超过1000个）下，不再执行周期性的全量同步操作 - [PR #138636](https://github.com/kubernetes/kubernetes/pull/138636) - **提升：** 减少 kube-proxy 在大型集群中的 CPU 和网络开销，提升网络平面的稳定性。",
+      "Windows 网络性能/稳定性修复：清理陈旧的远程端点，避免错误路由 - [PR #138602](https://github.com/kubernetes/kubernetes/pull/138602) - **提升：** 解决 DNS 超时问题，提升 Windows Pod 的网络性能和连接可靠性。"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "**建议升级**：对于运行 1.35.x 版本且受上述 Bug 影响的集群，建议安排升级到此版本，特别是存在调度器内存增长、Windows 网络问题或使用 kubeadm 管理集群的情况。",
+      "**重点测试**：如果集群包含 Windows 节点，升级后需重点测试 Pod 网络连通性和 DNS 解析功能。",
+      "**监控指标**：如果正在使用 `kubelet_pod_start_sli_duration_seconds` 指标进行监控或告警，请注意其计算逻辑已变更，升级后需观察指标变化，必要时调整告警阈值。",
+      "**kubeadm 用户**：在新集群初始化或现有集群添加节点时，将受益于更健壮的 etcd 检查和对负载均衡器延迟的容忍。",
+      "**滚动升级**：按照标准滚动升级流程进行，确保关键工作负载有足够的副本和 Pod 中断预算（PDB）。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。此版本为补丁版本，仅包含向后兼容的 Bug 修复和优化，无已知的破坏性变更或安全漏洞修复。升级风险较低。建议的升级时机：下一个常规维护窗口。需要特别关注的方面：1) Windows 节点升级后的网络验证；2) 调度器内存使用率在升级后的变化；3) 与 Pod 启动延迟 SLI 相关的监控告警。"
+  },
+  "statistics": {
+    "analyzed_prs": 8,
+    "analyzed_issues": 0,
+    "important_items": 8
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138153: Automated cherry pick of #131950: PodStartSLIDuration should exclude init container runtime, image pulling time, stateful pods, not immediately schedulable pods",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138434: Automated cherry pick of #138324: scheduler: fix inFlightPods leak when pod is recreated during scheduling failure",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138539: Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138602: Automated cherry pick of #138000: Delete remote endpoint if it has same ip as local endpoint in the system.",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#138636: Automated cherry pick of #138571: kube-proxy: don't do full periodic syncs on large cluster mode",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138683: Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138803: Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138959: Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "reason": "Has label 'kind/bug'"
+    }
+  ],
+  "prs": {
+    "138153": {
+      "title": "Automated cherry pick of #131950: PodStartSLIDuration should exclude init container runtime, image pulling time, stateful pods, not immediately schedulable pods",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138153",
+      "body": "Cherry pick of #131950 on release-1.35.\n\n#131950: PodStartSLIDuration should exclude init container runtime, image pulling time, stateful pods, not immediately schedulable pods\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubelet_pod_start_sli_duration_seconds_bucket metric now matches pod startup latency SLI/SLO documentation.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-01T18:12:23Z",
+      "merged_at": "2026-05-08T23:47:17Z",
+      "author": "alimaazamat",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/XL",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138434": {
+      "title": "Automated cherry pick of #138324: scheduler: fix inFlightPods leak when pod is recreated during scheduling failure",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138434",
+      "body": "Cherry pick of #138324 on release-1.35.\n\n#138324: scheduler: fix inFlightPods leak when pod is recreated during scheduling failure\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a scheduler bug where replacing a Pod with the same name during a failed scheduling attempt could leave stale in-flight queue state and unbounded growth of in-flight event tracking. The scheduler now clears in-flight state using the UID from the scheduling attempt, not only the UID on the refreshed Pod object.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-17T06:45:03Z",
+      "merged_at": "2026-04-22T13:27:53Z",
+      "author": "Argh4k",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138539": {
+      "title": "Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138539",
+      "body": "Cherry pick of #138403 on release-1.35.\n\n#138403: kubeadm: Evaluate etcd cluster health using quorum\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: when checking the etcd cluster status use a quorum approach, instead of considering the health of all members. This would allow the check to not fail if there are sufficient healthy voting members.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-23T08:15:18Z",
+      "merged_at": "2026-04-23T13:16:49Z",
+      "author": "ahrtr",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138602": {
+      "title": "Automated cherry pick of #138000: Delete remote endpoint if it has same ip as local endpoint in the system.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138602",
+      "body": "Cherry pick of #138000 on release-1.35.\n\n#138000: Delete remote endpoint if it has same ip as local endpoint in the system.\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed stale remote HNS endpoint cleanup on Windows when a pod IP is reused across nodes in L2Bridge networks, preventing DNS timeouts caused by traffic being routed to the wrong node.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-26T09:54:55Z",
+      "merged_at": "2026-05-05T02:34:21Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/XL",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138636": {
+      "title": "Automated cherry pick of #138571: kube-proxy: don't do full periodic syncs on large cluster mode",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138636",
+      "body": "Cherry pick of #138571 on release-1.35.\n\n#138571: kube-proxy: don't do full periodic syncs on large cluster mode\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkube-proxy does not perform full-sync operations when operation in large cluster mode (more than 1000 endpoints)\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-28T07:49:56Z",
+      "merged_at": "2026-05-06T01:04:21Z",
+      "author": "aojea",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138683": {
+      "title": "Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138683",
+      "body": "Cherry pick of #138449 on release-1.35.\n\n#138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: during 'kubeadm init', if the default 'admin.conf' and 'super-admin.conf' paths are used, load the files, but construct in memory kubeconfigs that point to the InitConfiguration.localAPIEndpoint instead of the ClusterConfiguration.controlPlaneEndpoint. This would resolve issues with delayed load balancers which are provisioned only after the first kube-apiserver instance starts.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-29T15:40:09Z",
+      "merged_at": "2026-05-05T15:00:26Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138803": {
+      "title": "Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138803",
+      "body": "Cherry pick of #138692 on release-1.35.\n\n#138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: skip LocalAPIEndpoint defaulting on 'kubeadm join' for worker nodes.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-06T09:08:47Z",
+      "merged_at": "2026-05-08T11:55:17Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138959": {
+      "title": "Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138959",
+      "body": "Cherry pick of #138957 on release-1.35.\n\n#138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: use a dedicated ClusterRole 'system:kubelet-api-admin' for the kube-apiserver kubelet client.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-11T09:25:48Z",
+      "merged_at": "2026-05-11T12:23:51Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {}
+}
