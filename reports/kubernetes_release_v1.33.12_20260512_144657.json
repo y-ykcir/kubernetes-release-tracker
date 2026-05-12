@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "generated_at": "2026-05-12T14:47:18.801698",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.33.12",
+    "name": "v1.33.12",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.33.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.33.md) for more details.\n\n\n\n",
+    "published_at": "2026-05-12T14:09:45Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.33.12",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.33.12 是一个补丁版本，主要包含四个针对 kubeadm 的 Bug 修复，旨在提升集群初始化、节点加入的健壮性和安全性，无 API 变更或破坏性更新。",
+    "key_changes": [
+      "kubeadm: 检查 etcd 集群状态时采用法定人数 (quorum) 机制，而非要求所有成员健康 - [PR #138541](https://github.com/kubernetes/kubernetes/pull/138541)",
+      "kubeadm: 在 `init` 阶段使用 `localAPIEndpoint` 进行所有 API 调用，解决延迟负载均衡器场景下的连接问题 - [PR #138686](https://github.com/kubernetes/kubernetes/pull/138686)",
+      "kubeadm: 在工作节点执行 `join` 时跳过 `LocalAPIEndpoint` 的默认设置 - [PR #138805](https://github.com/kubernetes/kubernetes/pull/138805)",
+      "kubeadm: 为 kube-apiserver 的 kubelet 客户端使用专用的 ClusterRole `system:kubelet-api-admin` - [PR #138964](https://github.com/kubernetes/kubernetes/pull/138964)"
+    ],
+    "important_bugfixes": [
+      "修复 kubeadm etcd 健康检查过于严格的问题：之前检查要求所有 etcd 成员健康，现在只要达到法定人数的健康投票成员即可通过。 - [PR #138541](https://github.com/kubernetes/kubernetes/pull/138541) - **影响：** 在 etcd 集群部分成员临时不可用（如重启、网络波动）时，`kubeadm init` 或 `kubeadm upgrade` 等操作将更健壮，不易失败。",
+      "修复 kubeadm init 在特定配置下可能使用错误 API 端点的问题：当使用延迟配置的负载均衡器时，修复确保使用正确的本地端点建立初始连接。 - [PR #138686](https://github.com/kubernetes/kubernetes/pull/138686) - **影响：** 解决了在云环境或需要先启动 apiserver 再配置负载均衡器的场景下，集群初始化可能失败的问题。",
+      "修复工作节点加入时不必要的配置默认设置：修复了 `kubeadm join` 为工作节点设置 `LocalAPIEndpoint` 字段的问题，该字段仅对控制平面节点有意义。 - [PR #138805](https://github.com/kubernetes/kubernetes/pull/138805) - **影响：** 使工作节点的配置更加清晰和准确，避免潜在的配置混淆。",
+      "修复 kube-apiserver kubelet 客户端权限过大的问题：为其创建专用 ClusterRole，遵循最小权限原则。 - [PR #138964](https://github.com/kubernetes/kubernetes/pull/138964) - **影响：** 提升了集群安全性，减少了 kube-apiserver 服务账户的潜在攻击面。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [],
+    "breaking_changes": [],
+    "recommendations": [
+      "**升级建议**：对于使用 kubeadm 部署或管理集群的环境，特别是那些经历过 etcd 健康检查失败或负载均衡器延迟配置问题的集群，建议安排升级到此版本。",
+      "**注意事项**：本次升级为向后兼容的 Bug 修复，理论上不会引入破坏性变更。但建议在测试环境中先行验证，特别是验证集群初始化 (`kubeadm init`) 和节点加入 (`kubeadm join`) 流程。",
+      "**最佳实践**：升级前，请确保已备份重要的集群配置和状态（如 etcd 数据）。升级 kubeadm 工具后，可先使用 `kubeadm upgrade plan` 查看升级路径。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。此版本为维护性补丁发布，专注于修复 kubeadm 工具的具体问题，不涉及核心组件 API 变更或功能废弃。建议在常规维护窗口内进行升级。需要特别关注的方面是验证修复是否解决了您环境中曾遇到的特定 kubeadm 问题（如节点加入失败）。对于生产环境，遵循先测试后生产的标准流程即可。"
+  },
+  "statistics": {
+    "analyzed_prs": 4,
+    "analyzed_issues": 0,
+    "important_items": 4
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138541: Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138686: Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138805: Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138964: Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "reason": "Has label 'kind/bug'"
+    }
+  ],
+  "prs": {
+    "138541": {
+      "title": "Automated cherry pick of #138403: kubeadm: Evaluate etcd cluster health using quorum",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138541",
+      "body": "Cherry pick of #138403 on release-1.33.\n\n#138403: kubeadm: Evaluate etcd cluster health using quorum\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: when checking the etcd cluster status use a quorum approach, instead of considering the health of all members. This would allow the check to not fail if there are sufficient healthy voting members.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-23T08:16:31Z",
+      "merged_at": "2026-04-23T13:16:48Z",
+      "author": "ahrtr",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138686": {
+      "title": "Automated cherry pick of #138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138686",
+      "body": "Cherry pick of #138449 on release-1.33.\n\n#138449: kubeadm: use the localAPIEndpoint for all API calls in 'init'\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: during 'kubeadm init', if the default 'admin.conf' and 'super-admin.conf' paths are used, load the files, but construct in memory kubeconfigs that point to the InitConfiguration.localAPIEndpoint instead of the ClusterConfiguration.controlPlaneEndpoint. This would resolve issues with delayed load balancers which are provisioned only after the first kube-apiserver instance starts.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-29T15:48:59Z",
+      "merged_at": "2026-05-11T16:21:49Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138805": {
+      "title": "Automated cherry pick of #138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138805",
+      "body": "Cherry pick of #138692 on release-1.33.\n\n#138692: kubeadm: skip LocalAPIEndpoint defaulting on worker join\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: skip LocalAPIEndpoint defaulting on 'kubeadm join' for worker nodes.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-06T09:09:44Z",
+      "merged_at": "2026-05-11T16:21:58Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138964": {
+      "title": "Automated cherry pick of #138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138964",
+      "body": "Cherry pick of #138957 on release-1.33.\n\n#138957: kubeadm: use dedicated ClusterRole for apiserver kubelet client\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind cleanup\n\n\n```release-note\nkubeadm: use a dedicated ClusterRole 'system:kubelet-api-admin' for the kube-apiserver kubelet client.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-11T12:34:35Z",
+      "merged_at": "2026-05-11T14:43:51Z",
+      "author": "neolit123",
+      "labels": [
+        "kind/bug",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {}
+}
