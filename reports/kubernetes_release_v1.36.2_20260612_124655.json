@@ -1,0 +1,393 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-12T12:48:20.505024",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.36.2",
+    "name": "v1.36.2",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md) for more details.\n\n\n\n",
+    "published_at": "2026-06-12T11:34:56Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.36.2",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.36.2 是一个关键的补丁版本，主要修复了 v1.36.0/1.36.1 中引入的多个严重 Bug 和回归问题，包括可能导致调度器 panic、数据损坏、Pod 创建失败和功能异常的缺陷，强烈建议受影响的集群升级。",
+    "key_changes": [
+      "修复了从 Secret 设置环境变量时，若包含二进制非 UTF-8 数据会导致 Pod 创建失败的回归问题 - [PR #139192](https://github.com/kubernetes/kubernetes/pull/139192) - **影响：** 自 1.34 版本起，使用二进制数据 Secret 作为环境变量的 Pod 将无法启动。",
+      "修复了 Dynamic Resource Allocation (DRA) 调度器在设备使用 `SharedCounters` 时，可能将互斥的设备分区分配给多个 Pod 的严重 Bug - [PR #139211](https://github.com/kubernetes/kubernetes/pull/139211) - **影响：** 可能导致工作负载失败、设备冲突、崩溃或数据丢失。",
+      "修复了当 CSI `requiresRepublish=true` 且 `NodePublishVolume` 调用失败时，kubelet 错误删除挂载目录的问题 - [PR #139228](https://github.com/kubernetes/kubernetes/pull/139228) - **影响：** Pod 内卷数据变为陈旧且无法修复，导致数据不一致。",
+      "修复了 endpoint 控制器在处理 `IPFamilies` 字段为空的 Service（旧版单栈服务）时可能发生的 panic - [PR #139233](https://github.com/kubernetes/kubernetes/pull/139233) - **影响：** 控制器组件崩溃，影响服务发现功能。",
+      "修复了 1.36 中修改处于 `suspended` 状态但 `JobSuspended` 条件尚未设置的 Job 的调度指令（如 nodeSelector）会被拒绝的回归问题 - [PR #139329](https://github.com/kubernetes/kubernetes/pull/139329) - **影响：** 无法动态更新挂起 Job 的调度约束。"
+    ],
+    "important_bugfixes": [
+      "修复了 DRA `AllocationMode: All` 与消耗计数器一起使用时导致 kube-scheduler panic 的问题 - [PR #138988](https://github.com/kubernetes/kubernetes/pull/138988) - **影响：** 调度器组件崩溃，影响集群调度能力。",
+      "修复了同时包含多节点声明和单节点声明的 Pod 可能卡在 Pending 状态的 DRA 计分 Bug - [PR #139363](https://github.com/kubernetes/kubernetes/pull/139363) - **影响：** 依赖 DRA 的 Pod 无法被调度。",
+      "修复了 `kubeadm init phase certs --dry-run` 在复制现有 CA 文件时路径错误的问题 - [PR #139445](https://github.com/kubernetes/kubernetes/pull/139445) - **影响：** kubeadm dry-run 操作可能失败或产生误导性输出。"
+    ],
+    "security_issues": [
+      "基础镜像和构建工具链升级至 Go 1.26.4，通常包含重要的安全修复 - [PR #138871](https://github.com/kubernetes/kubernetes/pull/138871) & [PR #139585](https://github.com/kubernetes/kubernetes/pull/139585) - **风险级别：** 中 - 建议升级以获取最新的安全补丁。"
+    ],
+    "performance_improvements": [
+      "优化了 SELinux 指标发射的性能，避免了昂贵的比较操作 - [PR #139136](https://github.com/kubernetes/kubernetes/pull/139136) - **提升：** 减少 kubelet 在生成 SELinux 相关指标时的 CPU 开销。"
+    ],
+    "breaking_changes": [
+      "此版本未引入新的破坏性变更。主要修复了之前版本（特别是 1.34 和 1.36.0/1.36.1）中引入的回归问题。"
+    ],
+    "recommendations": [
+      "**立即升级建议：** 如果您正在使用 1.36.0 或 1.36.1，尤其是使用了 DRA 功能、CSI 存储卷（且 `requiresRepublish=true`）、或将包含二进制数据的 Secret 用作环境变量，请尽快安排升级到 v1.36.2。",
+      "**升级前检查：** 确认集群中是否存在 `IPFamilies` 字段为空的老式 Service，以及是否存在调度指令被意外拒绝的挂起 Job。",
+      "**测试策略：** 在非生产环境充分测试，重点验证 DRA 设备分配、CSI 卷操作、基于 Secret 的环境变量注入以及 Job 调度指令更新等功能。",
+      "**监控重点：** 升级后，密切关注 kube-scheduler 和 kube-controller-manager 的日志，检查是否有 panic 或错误；监控使用 DRA 和 CSI 的 Pod 状态。"
+    ],
+    "risk_assessment": "整体风险评估：**中低风险**。此版本是修复导向的补丁发布，解决了多个可能导致服务中断和数据损坏的严重 Bug，因此升级的收益远大于风险。建议的升级时机是**尽快**，特别是对于已受上述 Bug 影响的集群。需要特别关注的方面是 DRA 设备驱动与 CSI 驱动在修复后的兼容性，以及升级过程中涉及状态重建的功能（如 CSI 卷重挂载）。"
+  },
+  "statistics": {
+    "analyzed_prs": 11,
+    "analyzed_issues": 1,
+    "important_items": 12
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138988: Automated cherry pick of #138885: DRA: fix AllocationModeAll with consumed counters",
+      "reason": "Contains 'panic'; Has label 'kind/bug'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#139136: Automated cherry pick of #138981: Improve performance characteristic of selinux metric emission",
+      "reason": "Contains 'performance'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139192: [1.36] Restore ability to plumb binary data through envvar values",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139211: Automated cherry pick of #139040: DRA: account for shared devices when rebuilding counters",
+      "reason": "Contains 'crash'; Has label 'kind/bug'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#139228: Automated cherry pick of #139045: fix(csi): preserve mount dir when NodePublish fails on a remount",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#139233: Automated cherry pick of #138736: fix: avoid panic on services with empty IPFamilies",
+      "reason": "Contains 'panic'; Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#139329: Automated cherry pick of #139287: batch/job: Fix scheduling directives mutation for not-yet-started suspended Jobs",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#139363: Automated cherry pick of #139017: Fix dra scoring bug with mixed allocated and unallocated claims",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#139445: Automated cherry pick of #139339: kubeadm: fix dry-run CA copy paths in init certs",
+      "reason": "Contains 'regression'; Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#138871: release-1.36: upgrade go to 1.26.4",
+      "reason": "Contains 'CVE'; Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139585: [release-1.36] [go]Bump images and versions to go 1.26.4 and distroless iptables",
+      "reason": "Has label 'priority/critical-urgent'; Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#139132: CreateContainerError when secret env var contains invalid UTF-8 bytes (gRPC strict validation regression)",
+      "reason": "Contains 'regression'; Has label 'kind/regression'"
+    }
+  ],
+  "prs": {
+    "138988": {
+      "title": "Automated cherry pick of #138885: DRA: fix AllocationModeAll with consumed counters",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138988",
+      "body": "Cherry pick of #138885 on release-1.36.\n\n#138885: DRA: fix AllocationModeAll with consumed counters\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a kube-scheduler panic when a DRA ResourceClaim using `allocationMode: All` selects a device that consumes shared counters.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-12T10:07:05Z",
+      "merged_at": "2026-06-08T11:03:40Z",
+      "author": "pohly",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "139136": {
+      "title": "Automated cherry pick of #138981: Improve performance characteristic of selinux metric emission",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139136",
+      "body": "Cherry pick of #138981 on release-1.36.\n\n#138981: Improve performance characteristic of selinux metric emission\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nAvoid costly comparisons during selinux metric emission.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-18T13:46:37Z",
+      "merged_at": "2026-06-08T11:03:47Z",
+      "author": "gnufied",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/storage",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139192": {
+      "title": "[1.36] Restore ability to plumb binary data through envvar values",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139192",
+      "body": "Manual cherry-pick and regenerate of https://github.com/kubernetes/kubernetes/pull/139168 on 1.36\r\n\r\n#### What type of PR is this?\r\n\r\n/kind bug\r\n/kind regression\r\n\r\n#### What this PR does / why we need it:\r\n\r\nRestores pre-1.34 ability to use Secret API objects with binary data as container env values\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nhttps://github.com/kubernetes/kubernetes/issues/139132\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThis changes the cri-api value field from `string` to `bytes`. This encodes identically on the wire, but removes the requirement that the value be valid utf-8. That requirement was not enforced in practice prior to 1.34, due to the use of gogo protobuf to encode on the kubelet side.\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nFixes a 1.34+ regression handling containers with environment values set from Secret API objects containing binary non-utf8 data.\r\n```\r\n\r\n/hold for main PR discussion and merge",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-20T17:55:22Z",
+      "merged_at": "2026-06-08T09:43:10Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139211": {
+      "title": "Automated cherry pick of #139040: DRA: account for shared devices when rebuilding counters",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139211",
+      "body": "Cherry pick of #139040 on release-1.36.\n\n#139040: DRA: account for shared devices when rebuilding counters\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a Dynamic Resource Allocation scheduler bug that could assign mutually exclusive\ndevice partitions to multiple Pods. This affected DRA drivers using `SharedCounters`\n(`DRAPartitionableDevices`) together with multi-allocatable devices (`DRAConsumableCapacity`).\nDepending on the device and driver, the incorrect double-allocation could cause workload failures,\ndevice conflicts, crashes, or data loss.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-21T05:01:40Z",
+      "merged_at": "2026-06-08T11:03:55Z",
+      "author": "ashvindeodhar",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "139228": {
+      "title": "Automated cherry pick of #139045: fix(csi): preserve mount dir when NodePublish fails on a remount",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139228",
+      "body": "Cherry pick of #139045 on release-1.36.\n\n#139045: fix(csi): preserve mount dir when NodePublish fails on a remount\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed an issue where kubelet would delete the CSI mount directory when\r\na periodic NodePublishVolume call (triggered by\r\nCSIDriver.spec.requiresRepublish=true) returned an error, leaving the\r\npod with stale volume contents that subsequent successful republishes\r\ncould not repair.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-21T19:15:39Z",
+      "merged_at": "2026-06-08T11:04:03Z",
+      "author": "aramase",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "lgtm",
+        "sig/storage",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139233": {
+      "title": "Automated cherry pick of #138736: fix: avoid panic on services with empty IPFamilies",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139233",
+      "body": "Cherry pick of #138736 on release-1.36.\n\n#138736: fix: avoid panic on services with empty IPFamilies\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\nFixed a panic in the endpoint controller when processing services with empty IPFamilies field (pre-dual-stack services that were never spec-updated).\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-21T20:36:24Z",
+      "merged_at": "2026-06-08T11:04:11Z",
+      "author": "rahulbabu95",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "139329": {
+      "title": "Automated cherry pick of #139287: batch/job: Fix scheduling directives mutation for not-yet-started suspended Jobs",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139329",
+      "body": "Cherry pick of #139287 on release-1.36.\n\n#139287: batch/job: Fix scheduling directives mutation for not-yet-started suspended Jobs\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\nFixed a regression in 1.36 where modifications to scheduling directives (nodeSelector, tolerations, node affinity) on suspended Jobs were rejected if the JobSuspended condition had not yet been set by the job controller.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-27T14:28:23Z",
+      "merged_at": "2026-06-01T13:30:51Z",
+      "author": "kannon92",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "priority/important-soon",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "139363": {
+      "title": "Automated cherry pick of #139017: Fix dra scoring bug with mixed allocated and unallocated claims",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139363",
+      "body": "Cherry pick of #139017 on release-1.36.\n\n#139017: Fix dra scoring bug with mixed allocated and unallocated claims\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a bug where Pods that share multi-node claims and also have per-node claims can get stuck in Pending.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-28T18:03:41Z",
+      "merged_at": "2026-06-08T11:04:19Z",
+      "author": "nojnhuh",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "139445": {
+      "title": "Automated cherry pick of #139339: kubeadm: fix dry-run CA copy paths in init certs",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139445",
+      "body": "Cherry pick of #139339 on release-1.36.\n\n#139339: kubeadm: fix dry-run CA copy paths in init certs\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\nkubeadm: fixed kubeadm init phase certs --dry-run to correctly copy existing CA files.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-02T15:12:55Z",
+      "merged_at": "2026-06-08T16:09:52Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "138871": {
+      "title": "release-1.36: upgrade go to 1.26.4",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138871",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nUpgrades go to address CVEs.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n~~[This is a manually filed cherry-pick of https://github.com/kubernetes/kubernetes/pull/138864 because the script is throwing errors, but it is just `git cherry-pick` with no changes]~~\r\n\r\nUpdated to 1.26.4 since we've taken too long to merge this.\r\n\r\nWe haven't updated kube-cross, but that's fine because we'll just fetch go with GOTOOLCHAIN after downloading the image.\r\nWe haven't updated the base images, because we replace the go-runner binary with kube-log-runner from this repo anyhow (TODO: https://github.com/kubernetes/release/issues/4270 ... I still need input on how we want to follow-up)\r\n\r\nAll core binaries / direct release artifacts will be covered by this one-line patch.\r\n\r\nCI will auto-upgrade the test images to match later, which is non-blocking.\r\n\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nKubernetes is now built with Go 1.26.4\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-07T18:46:26Z",
+      "merged_at": "2026-06-04T11:27:46Z",
+      "author": "BenTheElder",
+      "labels": [
+        "lgtm",
+        "release-note",
+        "size/XS",
+        "kind/feature",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139585": {
+      "title": "[release-1.36] [go]Bump images and versions to go 1.26.4 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139585",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to go 1.26.4 and distroless iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nxref https://github.com/kubernetes/release/issues/4421\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nKubernetes is now built using Go 1.26.4\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n```docs\r\n\r\n```\r\n\r\n/assign @Verolop @saschagrunert @dims  \r\ncc @kubernetes/release-engineering ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-09T10:51:54Z",
+      "merged_at": "2026-06-09T13:15:41Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "priority/critical-urgent",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "triage/accepted"
+      ]
+    }
+  },
+  "issues": {
+    "139132": {
+      "title": "CreateContainerError when secret env var contains invalid UTF-8 bytes (gRPC strict validation regression)",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139132",
+      "body": "### What happened?\n\nPods fail with `CreateContainerError` and the following event (events.k8s.io/v1) message:\n\n```\nError: grpc: error while marshaling: string field contains invalid UTF-8\n```\n\nWhen an environment variable sourced from a Kubernetes Secret contains bytes that are not valid UTF-8. The kubelet passes the raw secret bytes as a protobuf `string` field in the CRI `CreateContainerRequest` to containerd. Since gRPC v1.72+ (bundled in k8s 1.34) enforces strict UTF-8 validation on `string` fields, the container creation is rejected.\n\nThis is distinct from #136323 / #136325 which fixed env var *expansion* truncating multi-byte UTF-8 characters. That fix does not address this case - here the secret value itself contains raw bytes that were never valid UTF-8 in the first place.\n\nThe same pods work on kubelet v1.33.7 nodes in the same cluster because the older gRPC version did not enforce UTF-8 validation on string fields. This is a silent behavioral regression with no warning or migration path.\n\n### What did you expect to happen?\n\nEither:\n\n1. The kubelet should validate secret values for UTF-8 correctness before sending them over CRI gRPC, and emit a clear warning/event identifying which env var contains the invalid value.\n2. The CRI protobuf definition should use `bytes` instead of `string` for env var values (since secrets are fundamentally binary).\n3. At minimum, the error message should identify which specific environment variable contains the invalid UTF-8, rather than the opaque gRPC marshaling error.\n\nCurrently there is no indication of which env var is problematic, making debugging difficult.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n```bash\n# 1. Create a secret containing invalid UTF-8 bytes\n#    \\xc3\\x28 is an incomplete UTF-8 sequence (0xC3 expects a continuation byte 0x80-0xBF, not 0x28)\npython3 -c \"\nimport base64\ninvalid_bytes = b'hello\\xc3\\x28world'\nencoded = base64.b64encode(invalid_bytes).decode()\nmanifest = f'''apiVersion: v1\nkind: Secret\nmetadata:\n  name: utf8-invalid-secret\n  namespace: default\ndata:\n  test-key: {encoded}\n'''\nprint(manifest)\n\" | kubectl apply -f -\n\n# 2. Create a pod that uses this secret as an env var\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Pod\nmetadata:\n  name: utf8-test-invalid\n  namespace: default\nspec:\n  containers:\n  - name: test\n    image: busybox:latest\n    command: [\"sh\", \"-c\", \"sleep 3600\"]\n    env:\n    - name: BAD_VAR\n      valueFrom:\n        secretKeyRef:\n          name: utf8-invalid-secret\n          key: test-key\n  restartPolicy: Never\nEOF\n\n# 3. Observe the pod enters CreateContainerError\nkubectl get pod utf8-test-invalid\n# NAME                READY   STATUS                 RESTARTS   AGE\n# utf8-test-invalid   0/1     CreateContainerError   0          14s\n\nkubectl describe pod utf8-test-invalid | grep -A2 \"Warning.*Failed\"\n# Warning  Failed  kubelet  Error: grpc: error while marshaling: string field contains invalid UTF-8\n```\n\nNote: The same secret and pod spec works without error on k8s 1.33 nodes (older gRPC without strict UTF-8 enforcement).\n\n### Anything else we need to know?\n\nPartially redacted warning events:\n\n<details>\n```yaml\napiVersion: events.k8s.io/v1\nkind: Event\nmetadata:\n  creationTimestamp: <redacted>\n  name: <redacted>\n  namespace: <redacted>\n  resourceVersion: <redacted>\n  uid: <redacted>\nnote: 'Error: grpc: error while marshaling: string field contains invalid UTF-8'\nreason: Failed\nregarding:\n  apiVersion: v1\n  fieldPath: spec.containers{<redacted>}\n  kind: Pod\n  name: <redacted>\n  namespace: <redacted>\n  resourceVersion: <redacted>\n  uid: <redacted>\nreportingController: kubelet\nreportingInstance: aks-<redacted>\ntype: Warning\n```\n</details>\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nClient Version: v1.36.1\nKustomize Version: v5.8.1\nServer Version: v1.34.6\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\n\nAzure Kubernetes Service (AKS)\n\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n$ uname -a  # (node OS)\nLinux nginx 6.6.130.1-3.azl3 #1 SMP PREEMPT_DYNAMIC Wed Apr  1 04:34:46 UTC 2026 x86_64 GNU/Linux\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\nAKS managed (az aks)\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\ncontainerd://2.0.0\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "open",
+      "created_at": "2026-05-18T08:34:05Z",
+      "closed_at": null,
+      "author": "tnn-simon",
+      "labels": [
+        "priority/important-soon",
+        "sig/node",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    }
+  }
+}
