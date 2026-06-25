@@ -1,0 +1,1261 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-25T03:49:59.979682",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.37.0-alpha.2",
+    "name": "v1.37.0-alpha.2",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.37.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.37.md) for more details.\n\n\n\n",
+    "published_at": "2026-06-25T02:40:51Z",
+    "prerelease": true,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.37.0-alpha.2",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.37.0-alpha.2 是一个早期开发版本，主要引入了工作负载感知调度（Workload-aware Scheduling）的重大API演进、关键的网络与节点稳定性修复，以及多项性能优化，为生产环境未来升级提供了重要的技术预览。",
+    "key_changes": [
+      "工作负载感知调度API演进：Workload和PodGroup API的minCount字段现在可变，允许动态调整Pod组的最小数量 - [PR #139279](https://github.com/kubernetes/kubernetes/pull/139279)",
+      "功能门合并：GangScheduling和WorkloadAwarePreemption功能门合并为GenericWorkload，简化了配置 - [PR #139520](https://github.com/kubernetes/kubernetes/pull/139520)",
+      "PodGroup条件重命名：PodGroupScheduled条件更名为PodGroupInitiallyScheduled，以更准确地反映其含义 - [PR #139743](https://github.com/kubernetes/kubernetes/pull/139743) / [Issue #139740](https://github.com/kubernetes/kubernetes/issues/139740)",
+      "服务代理子资源迁移：service/proxy子资源实现从Endpoints迁移到EndpointSlices，这是服务发现架构演进的一部分 - [PR #134860](https://github.com/kubernetes/kubernetes/pull/134860)",
+      "节点监控并行化：引入MonitorNodes循环的并行化，提升大规模集群的节点监控效率 - [PR #137964](https://github.com/kubernetes/kubernetes/pull/137964)",
+      "HPA支持缩放到零：HPAScaleToZero功能门升级到Beta，允许HPA将副本数缩减到0 - [PR #139648](https://github.com/kubernetes/kubernetes/pull/139648)",
+      "服务名称验证放宽：KEP-5311放宽服务DNS名称验证的功能升级到GA - [PR #139282](https://github.com/kubernetes/kubernetes/pull/139282)"
+    ],
+    "important_bugfixes": [
+      "修复节点关闭管理器的dbus连接泄漏，该问题会导致线程耗尽和kubelet崩溃 - [PR #137141](https://github.com/kubernetes/kubernetes/pull/137141) - **影响：** 长时间运行后可能导致kubelet因线程耗尽而崩溃，影响节点稳定性",
+      "修复Job控制器在Pod创建回退期间错误报告active=0，导致Pod卡在Terminating状态且Job状态更新失败 - [PR #139457](https://github.com/kubernetes/kubernetes/pull/139457) - **影响：** 使用指数退避的Job可能无法正确更新状态，导致Pod清理延迟",
+      "修复kube-proxy无法清理无端点的UDP服务的陈旧conntrack条目，导致流量黑洞 - [PR #139629](https://github.com/kubernetes/kubernetes/pull/139629) - **影响：** 缩容到零端点的UDP服务（如statsd）流量可能被错误地DNAT到已删除的Pod IP，造成服务中断",
+      "修复使用subPath挂载的Pod在FUSE/GlusterFS网络文件系统中断后陷入错误循环无法恢复 - [PR #139275](https://github.com/kubernetes/kubernetes/pull/139275) - **影响：** 使用特定网络文件系统的Pod在存储故障后可能无法自动恢复",
+      "修复Windows kube-proxy在HNS重启后因重复创建负载均衡器而失败的问题 - [PR #139503](https://github.com/kubernetes/kubernetes/pull/139503) - **影响：** Windows节点在HNS服务重启期间可能丢失服务连接性",
+      "修复kubeadm join过程中因API调用超时配置不当导致集群加入失败 - [PR #139667](https://github.com/kubernetes/kubernetes/pull/139667) - **影响：** 在API服务器响应慢时，新节点可能无法成功加入集群",
+      "修复PodGroupState缓存中带删除时间戳的Pod未被正确移除的问题 - [PR #138445](https://github.com/kubernetes/kubernetes/pull/138445) - **影响：** 调度器缓存可能包含已删除的Pod，影响调度决策准确性",
+      "修复DRA（动态资源分配）中ResourceClaim状态报告重复配置的问题 - [PR #139732](https://github.com/kubernetes/kubernetes/pull/139732) - **影响：** 资源分配状态信息可能不正确，影响设备管理"
+    ],
+    "security_issues": [
+      "client-go证书管理器硬编码ECDSA P-256密钥类型，无法配置为匹配集群CA的密钥类型 - [Issue #138987](https://github.com/kubernetes/kubernetes/issues/138987) - **风险级别：** 中 - 可能导致密钥类型不匹配，影响证书兼容性",
+      "API服务器在准入控制器Pod终止后仍保持TCP连接，可能向正在终止的Pod发送请求 - [Issue #127335](https://github.com/kubernetes/kubernetes/issues/127335) - **风险级别：** 中 - 可能破坏优雅关闭，导致请求失败或延迟"
+    ],
+    "performance_improvements": [
+      "优化调度器PVC引用计数聚合，通过增量计数减少计算开销 - [PR #139238](https://github.com/kubernetes/kubernetes/pull/139238) - **提升：** 显著改善大量使用PVC的集群的调度器性能",
+      "引入WatchListCompression功能门，支持压缩watch列表传输数据 - [PR #139308](https://github.com/kubernetes/kubernetes/pull/139308) - **提升：** 减少API服务器和客户端之间的网络流量",
+      "修复CEL对CRD metadata.name和metadata.generateName的成本估算，避免不必要的验证开销 - [PR #139573](https://github.com/kubernetes/kubernetes/pull/139573) - **提升：** 改善CRD验证性能",
+      "优化节点监控循环的并行化，提升大规模集群的监控效率 - [PR #137964](https://github.com/kubernetes/kubernetes/pull/137964) - **提升：** 改善节点状态更新的响应时间"
+    ],
+    "breaking_changes": [
+      "PodGroupScheduled条件更名为PodGroupInitiallyScheduled，需要更新相关的监控和自动化脚本 - [PR #139743](https://github.com/kubernetes/kubernetes/pull/139743) - **影响：** 依赖此条件名称的客户端和监控工具需要更新",
+      "服务代理子资源实现从Endpoints迁移到EndpointSlices，可能影响直接依赖内部API的自定义组件 - [PR #134860](https://github.com/kubernetes/kubernetes/pull/134860) - **影响：** 使用内部代理实现的工具需要适配新的EndpointSlice架构",
+      "kubeadm现在显式将kube-proxy模式设置为'iptables'，覆盖可能的默认值 - [PR #139777](https://github.com/kubernetes/kubernetes/pull/139777) - **影响：** 依赖其他代理模式（如ipvs）的kubeadm集群需要显式配置"
+    ],
+    "recommendations": [
+      "**生产环境暂缓升级**：这是alpha版本，包含实验性功能和不稳定变更，不建议用于生产环境",
+      "**测试环境重点验证**：在测试集群中重点验证工作负载感知调度相关功能，特别是PodGroup和Workload API的变更",
+      "**关注网络变更影响**：特别是kube-proxy UDP连接跟踪修复和Windows HNS处理改进，确保服务发现和负载均衡正常工作",
+      "**评估调度器性能**：如果集群大量使用PVC，验证PVC引用计数优化带来的调度性能提升",
+      "**更新监控配置**：注意PodGroup条件名称变更，相应更新Prometheus查询和告警规则",
+      "**为未来升级做准备**：审查服务代理子资源迁移的影响，确保自定义工具和脚本兼容EndpointSlice"
+    ],
+    "risk_assessment": "整体风险评估：高（alpha版本）。此版本包含大量API变更、功能门合并和架构演进，虽然修复了多个重要bug，但作为早期开发版本，稳定性无法保证。建议的升级时机：仅用于开发和测试环境，生产环境应等待至少beta版本。需要特别关注的方面：1) 工作负载感知调度相关变更的兼容性；2) 网络栈变更对现有服务的影响；3) 调度器性能优化的实际效果验证；4) Windows相关修复的稳定性。"
+  },
+  "statistics": {
+    "analyzed_prs": 32,
+    "analyzed_issues": 14,
+    "important_items": 44
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#139777: kubeadm: explicitly set the kube-proxy mode to 'iptables'",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#137964: Introduce paralellization for MonitorNodes loop.",
+      "reason": "Contains 'panic'; Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Potential crash issue; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139279: Make minCount mutable in Workload and PodGroup APIs",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139520: Merge GangScheduling and WorkloadAwarePreemption feature gates into GenericWorkload",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139573: Fix CEL cost estimates for CRD metadata.name and metadata.generateName",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139743: Rename PodGroupScheduled condition to PodGroupInitiallyScheduled",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#135300: kubelet: add diagnostic message to PodReadyToStartContainers condition",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#137141: Fix dbus connection leak in node shutdown manager causing thread exhaustion",
+      "reason": "Contains 'crash'; Has label 'kind/bug'; Potential crash issue; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#137652: kubelet: use DecimalSI format for ephemeral-storage capacity",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#138445: Fix pod updated with deletion timestamp not being removed from cached podGroupState",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139275: Fix(kubelet):  pods with subPath mounts stuck in error loop after FUSE/GlusterFS network filesystem disruption ",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139457: Fix job controller reporting active=0 during pod creation backoff",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#139503: Handling syscall failures when hns is not running.",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139629: kube-proxy: clear stale conntrack entries for UDP services with no endpoints",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139732: DRA: Fix duplicated configs reported in resourceclaim status",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139755: Expose a way to wait for a controller listener to be fully shutdown",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139842: kubeadm: treat already promoted learner as successful",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#138999: client-go: add Config.GenerateKey in certificate_manager.go",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139237: webhook use resolved endpoint IP instead of cached",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#139238: Optimize PVC ref count aggregation via delta counts",
+      "reason": "Contains 'performance'; Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139282: KEP-5311 Promote relaxed validation for Services names to GA",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139308: Introduce WatchListCompression feature gate",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139407: feat: Create CompositePodGroup feature gate",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139632: KEP-4222: Support CBOR encoding for non-resource endpoints.",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139648: KEP-2021: Promote HPAScaleToZero feature gate to beta",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139735: bump coredns to v1.14.4",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139968: Register APIServer informers for metrics and naming",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139651: Align DeviceTaintRule informer API version with handlers",
+      "reason": "Contains 'panic'; Contains 'crash'; Contains 'regression'; Contains 'deprecation'; Has label 'kind/bug'; Potential crash issue; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#134860: Port service/proxy subresource from Endpoints to EndpointSlice",
+      "reason": "Has label 'sig/api-machinery'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139731: DRA: Empty requests field in config status of resourceclaim when the config applies to all requests",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "PR",
+      "title": "#139760: update the error message, to make it to be more explict for windows",
+      "reason": "Contains 'regression'; Contains 'deprecation'; Performance related; Deprecation"
+    },
+    {
+      "type": "Issue",
+      "title": "#139740: Rename PodGroupScheduled condition to PodGroupInitiallyScheduled",
+      "reason": "Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#135299: PodReadyToStartContainers condition lacks diagnostic message when pods stuck in ContainerCreating",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#120613: Kubelet crashed due to thread exhaustion",
+      "reason": "Contains 'panic'; Contains 'crash'; Has label 'kind/bug'; Potential crash issue; Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#133927: The allocatable and capacity values ​​for \"ephemeral-storage\" under node.status are not displayed in the same format.",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#138422: Pod with deletion timestamp, may end up in unscheduledPods of PodGroupState indefinitely",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#139428: Job controller manageJob() returns active=0 during backoff, causing \"cannot set more ready pods than active\" status update rejection",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#139519: Windows KubeProxy fails to recreate LoadBalancer after HNS restart with error \"hcnCreateLoadBalancer failed in Win32: Cannot create a file when that file already exists. (0xb7)\"",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#139628: kube-proxy: stale UDP conntrack entries are never cleaned up when a service scales down to zero endpoints",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "Issue",
+      "title": "#139730: DRA: Duplicated configs reported in resourceclaim status",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#138987: client-go certificate manager hardcodes ECDSA P-256 key type with no way to configure it",
+      "reason": "Contains 'security'"
+    },
+    {
+      "type": "Issue",
+      "title": "#127335: API Server Keeps Using Open TCP Connections to Terminating Admission Controller Pods",
+      "reason": "Contains 'security'; Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "Issue",
+      "title": "#138426: Degraded scheduler performance due due to PVC mounts",
+      "reason": "Contains 'performance'; Performance related"
+    }
+  ],
+  "prs": {
+    "139777": {
+      "title": "kubeadm: explicitly set the kube-proxy mode to 'iptables'",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139777",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind cleanup deprecation\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nIn 1.37 kube-proxy will start throwing warnings if the user has not set the 'mode' field explicitly.\r\n\r\nThis is part of the steps to migrate the default 'mode' from 'iptables' to 'nftables'.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nxref\r\n- https://github.com/kubernetes/kubeadm/issues/3309\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkubeadm: if the user is providing a KubeProxyConfiguration with an empty value for the 'mode' field or if KubeProxyConfiguration is not provided, explicitly set the mode to 'iptables'. In 1.37 kube-proxy will start throwing a warning if the user has not explicitly set the field. This is part of the plan to switch the default mode to 'nftables' in a future release.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-16T11:22:29Z",
+      "merged_at": "2026-06-16T17:17:20Z",
+      "author": "neolit123",
+      "labels": [
+        "priority/important-soon",
+        "kind/cleanup",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "kind/deprecation",
+        "triage/accepted"
+      ]
+    },
+    "137964": {
+      "title": "Introduce paralellization for MonitorNodes loop.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137964",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nThis PR refines the CloudNodeLifecycleController configuration structure, adds concurrency support for node status monitoring, registers new latency and throughput metrics, and deprecates the global --node-monitor-period command-line flag in favor of a controller-specific component-config option.\r\n\r\nTo preserve backward compatibility, we deprecate the legacy global option and introduce fallback precedence logic, resolving potential test failures and panics caused by struct comparison reflections.\r\n\r\nThis PR is split into three commits:\r\n- Commit 1: Isolate cloud-node-lifecycle configuration (NodeLifecycleControllerConfiguration) and support processing node status concurrently across parallel workers.\r\n- Commit 2: Add instrumentation metrics (cloud_node_lifecycle_controller_monitor_nodes_duration_seconds and cloud_node_lifecycle_controller_nodes_processed_total) to measure parallel loop duration and throughput.\r\n- Commit 3: Deprecate the legacy global --node-monitor-period flag on KubeCloudSharedOptions and implement the backward-compatibility precedence fallback.\r\n\r\n#### Which issue(s) this PR is related to: N/A\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\nThere were a few options considered for precedence fallback when it comes to resolving node-monitor-period:\r\nOption A (adopted in the PR):\r\nFollowing the pattern established in [PR #136716](https://github.com/kubernetes/kubernetes/pull/136716), we inspect if the new config field is at its default (5s) or unset (0). If it matches the default/unset value, we assume it hasn't been explicitly configured by the user and fall back to the old field's value. If the new field was explicitly changed to any other value, it wins.\r\n\r\nOption B (previously proposed, rejected due to complexity and explicit binding of options to config):\r\nWe attempted to precisely track whether the --node-monitor-period flag was explicitly passed via CLI by capturing a reference to the pflag.FlagSet inside KubeCloudSharedOptions during AddFlags, and checking flagSet.Changed(\"node-monitor-period\").\r\n\r\nOption A was chosen, and there is one edge case associated with it:\r\n- If a user explicitly writes nodeLifecycleController.nodeMonitorPeriod: 5s (matching the default template value of 5s) in their configuration file, and also passes the legacy CLI flag --node-monitor-period=10s, the legacy CLI flag will override the config file.\r\n\r\nIn all other situations, when both are present (this is in line with the aforementioned PR) the CLI gets overridden by the custom config if it is present.\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\ncloud-provider: the `NodeSyncPeriod` field was moved from KubeCloudSharedConfiguration to `CloudControllerManagerConfiguration.NodeLifecycleController.NodeMonitorPeriod`\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-22T19:05:51Z",
+      "merged_at": "2026-06-24T21:34:27Z",
+      "author": "niewysoki",
+      "labels": [
+        "lgtm",
+        "area/cloudprovider",
+        "sig/node",
+        "sig/api-machinery",
+        "release-note",
+        "size/XL",
+        "kind/api-change",
+        "kind/feature",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "sig/instrumentation",
+        "area/code-generation",
+        "sig/cloud-provider",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139279": {
+      "title": "Make minCount mutable in Workload and PodGroup APIs",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139279",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n/kind api-change\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR makes minCount in Workload and PodGroup APIs mutable. This is implementation of change proposed in https://github.com/kubernetes/enhancements/pull/6076\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\nFixes #139278\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nminCount can be modify after setting in PodGroup and PodGroupTemplate, modifying template is not influencing already existing podgroups. \r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n[Other doc]: https://docs.google.com/document/d/1tflhZdsgxCXfVgb2OrNFuodBStVXd3fdLz-SlC2zxHU\r\n[KEP]: keps/sig-scheduling/4671-gang-scheduling/kep.yaml\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-25T13:23:27Z",
+      "merged_at": "2026-06-17T13:38:43Z",
+      "author": "antekjb",
+      "labels": [
+        "area/test",
+        "priority/important-soon",
+        "sig/scheduling",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/XL",
+        "kind/api-change",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "area/code-generation",
+        "ok-to-test",
+        "api-review",
+        "triage/accepted",
+        "area/api-validation",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139520": {
+      "title": "Merge GangScheduling and WorkloadAwarePreemption feature gates into GenericWorkload",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139520",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n/kind feature\r\n/kind api-change\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR merges three feature gates: GenericWorkload, GangScheduling and WorkloadAwarePreemption into one feature gate - GenericWorkload. Since all of these features have to rely on each other and there is no point in enabling/disabling only subset of them, it was decided to have only one feature gate for the whole functionality (Workload and PodGroup APIs, gang scheduling behavior in scheduler and Workload-Aware Preemption).\r\n\r\nIt's based on the KEP decision: https://github.com/kubernetes/enhancements/blob/825a9bf00ca6d4dc5073dd17b503e3d2a62b316a/keps/sig-scheduling/4671-gang-scheduling/README.md?plain=1#L1388.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nKEP: https://github.com/kubernetes/enhancements/issues/4671\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nThe GangScheduling and WorkloadAwarePreemption feature gates were removed, and GenericWorkload is used instead to enable all core workload-aware scheduling functionalities altogether.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-05T12:51:22Z",
+      "merged_at": "2026-06-17T07:03:35Z",
+      "author": "macsko",
+      "labels": [
+        "area/test",
+        "sig/scheduling",
+        "lgtm",
+        "sig/node",
+        "sig/api-machinery",
+        "release-note",
+        "size/XXL",
+        "kind/api-change",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "area/code-generation",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139573": {
+      "title": "Fix CEL cost estimates for CRD metadata.name and metadata.generateName",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139573",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nIn https://github.com/kubernetes-sigs/controller-tools/issues/1424 it was noticed that even though CRDs apply dns1123 style formats to metadata.name by default, CEL estimated cost assumes that metadata.name can be of unbounded length.\r\n\r\nHowever, Kubernetes flavored DNS1123 validation (`NameIsDNSSubdomain`) is applied unconditionally to all custom resources. This means that there is always a 253 byte limit.  This fixes CRDs to communicate that fact to CEL such that estimated costs work as expected.\r\n\r\nNote that is change is not visible beyond CEL (it is not visible to OpenAPI or elsewhere).\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\n#### Special notes for your reviewer:\r\n\r\nI consider this a estimated cost bug and so am not deferring the rollout across versions like done for many CEL related changes. Please let me know if you disagree.\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nFix CEL estimated cost of metadata.name and metadata.generateName for CRDs to match what the 253 limit that is validated by default unless the CRD author adds sets validations on the metadata fields.\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-09T03:32:23Z",
+      "merged_at": "2026-06-11T19:10:42Z",
+      "author": "jpbetz",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "kind/api-change",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139743": {
+      "title": "Rename PodGroupScheduled condition to PodGroupInitiallyScheduled",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139743",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind cleanup\r\n/kind api-change\r\n/wg workload-aware-scheduling\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nThis PR renames PodGroupScheduled condition to PodGroupInitiallyScheduled. Now it will be better describing behaviour  of the code.\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n--> \r\nFixes #139740\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nRename podGroup condition from PodGroupScheduled to PodGroupInitiallyScheduled, to express clearly that this condition is set after the PodGroup first becomes scheduled successfully, and may not reflect the latest state of the PodGroup.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n[KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-scheduling/4671-gang-scheduling/README.md\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-15T08:53:40Z",
+      "merged_at": "2026-06-17T14:46:51Z",
+      "author": "antekjb",
+      "labels": [
+        "area/test",
+        "kind/cleanup",
+        "sig/scheduling",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "kind/api-change",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "area/code-generation",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "135300": {
+      "title": "kubelet: add diagnostic message to PodReadyToStartContainers condition",
+      "url": "https://github.com/kubernetes/kubernetes/pull/135300",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind bug\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nPodReadyToStartContainers condition lacks diagnostic message when pods stuck in ContainerCreating\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\nFixes : https://github.com/kubernetes/kubernetes/issues/135299\r\n\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nThe `PodReadyToStartContainers` condition now includes a diagnostic message when `Status` is `False`, explaining why the pod sandbox is not ready (e.g., \"pod sandbox has no IP address\", \"no pod sandbox exists\"). This improves debuggability for pods stuck in `ContainerCreating` state without requiring access to node logs.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-11-14T02:51:40Z",
+      "merged_at": "2026-06-15T16:55:19Z",
+      "author": "harche",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "137141": {
+      "title": "Fix dbus connection leak in node shutdown manager causing thread exhaustion",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137141",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nWhen the node shutdown manager's `start()` method fails after creating a dbus connection (e.g., `CurrentInhibitDelay()` returns an error), the connection is never closed. The infinite retry loop in `Start()` keeps creating new connections, each spawning goroutines in the godbus library that never get cleaned up. Over time this leads to thread exhaustion and kubelet crash.\r\n\r\nThis PR fixes two connection leak paths:\r\n\r\n1. **On error:** Uses a `success` flag with `defer` to close the dbus connection if `start()` fails after creating it.\r\n2. **On reconnect:** Explicitly closes the old `m.dbusCon` before replacing it with a new one.\r\n\r\nAdditionally, `NewDBusCon()` is changed from `dbus.SystemBus()` (shared/cached singleton) to `dbus.ConnectSystemBus()` (private connection). The godbus library explicitly warns that `Close()` must not be called on shared connections returned by `SystemBus()`. `ConnectSystemBus()` creates an independent, authenticated connection that is safe to close.\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nFixes #120613\r\n\r\n#### Special notes for your reviewer:\r\n\r\n`None`\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFixed a bug where the kubelet node shutdown manager could leak dbus connections on repeated failures, eventually leading to thread exhaustion and crash.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nNONE\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-02-19T16:53:38Z",
+      "merged_at": "2026-06-24T20:06:19Z",
+      "author": "harche",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "lifecycle/rotten",
+        "triage/accepted"
+      ]
+    },
+    "137652": {
+      "title": "kubelet: use DecimalSI format for ephemeral-storage capacity",
+      "url": "https://github.com/kubernetes/kubernetes/pull/137652",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nI dug into why `kubectl describe node` shows mismatched formats for ephemeral-storage between capacity and allocatable. I realized the root cause is in `EphemeralStorageCapacityFromFsInfo()` in `pkg/kubelet/cadvisor/util.go`. It creates the ephemeral-storage capacity Quantity with `resource.BinarySI`. But filesystem byte counts from cadvisor aren't necessarily divisible by 1024, so `CanonicalizeBytes()` can't find a binary suffix (Ki, Mi, Gi) and falls back to a bare integer like `97842800000`. The API server then re-parses that bare integer as `DecimalSI`, since no suffix defaults to DecimalSI. This creates a format mismatch between capacity and allocatable.\r\n\r\nI changed `resource.BinarySI` to `resource.DecimalSI` in `EphemeralStorageCapacityFromFsInfo()`. DecimalSI should produces a clean suffixed representation (k, M, G) for any byte count, so both capacity and allocatable display consistently.\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nFixes #133927\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThe existing `setters_test.go` tests use `apiequality.Semantic.DeepEqual` which compares Quantities by numeric value only (ignoring format), so they pass without modification. The new test in `util_test.go` uses `reflect.DeepEqual` which checks format, confirming the fix and catching any regression back to BinarySI.\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nFixed inconsistent ephemeral-storage format between capacity and allocatable in node status by using DecimalSI format for ephemeral-storage capacity.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n```docs\r\nNONE\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-03-12T00:00:59Z",
+      "merged_at": "2026-06-11T08:54:43Z",
+      "author": "0xMH",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "138445": {
+      "title": "Fix pod updated with deletion timestamp not being removed from cached podGroupState",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138445",
+      "body": "#### What type of PR is this?\r\n/kind bug\r\n/sig scheduling\r\n\r\n#### What this PR does / why we need it:\r\n- **Scenario:** When an assumed pod is updated with a deletion timestamp, `sched.handleAssumedPodDeletion()` is called, which eventually calls `sched.Cache.ForgetPod()`, and consequently `Cache.forgetPodGroupMember()`.\r\n- **Expected:** pod is removed from relevant `PodGroupState`, and remove such`PodGroupState` if it became empty.\r\n- **Actual:** pod moves from `assumedPods` to `unschedulablePods`, and stays there either indefinitely or until the eventual `deletePod` request comes.\r\n- **Solution:** Make sure `Cache.removePodGroupMember()` is called in that case.\r\n\r\n#### Additional Notes:\r\n- After introduction of podGroupStates in cache, there is a confusion between intention and action of `cache.RemovePod()` and `cache.ForgetPod()`.\r\n- The current state is that: `cache.ForgetPod()` is called when a pod is getting deleted like the scenario mentioned above, while the intention should be `RemovePod()`.\r\n- Ideally, `cache.ForgetPod()` should be called when a scenario like \"unreserve and forget happens\" only, while `cache.RemovePod()`should be called for **ANY** scenario that involves \"pod deletion. Although there will be shared functionality (e.g. removing pod from assumed in cache, and cleaning cache up). but there are differences specially when that pod is a **podgroup** member.\r\n- Based on these notes, we can discuss further a small refactor in these to align intentions with actions.\r\n\r\n#### Which issue(s) this PR is related to:\r\nFixes [#<138422>](https://github.com/kubernetes/kubernetes/issues/138422)\r\n\r\n#### Special notes for your reviewer:\r\nNONE\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nAn assumed pod is correctly removed from podGroupStates in cache, when it gets updated with deletion timestamp.\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-17T13:32:07Z",
+      "merged_at": "2026-06-23T09:34:39Z",
+      "author": "iomarsayed",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139275": {
+      "title": "Fix(kubelet):  pods with subPath mounts stuck in error loop after FUSE/GlusterFS network filesystem disruption ",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139275",
+      "body": "#### What type of PR is this?\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\nAfter a FUSE-backed or GlusterFS network filesystem is disrupted (daemon killed, network lost, storage backend disconnected), pods that use subPath volume mounts enter a permanent error loop and never recover.\r\nThis PR will detect the zombie bind mount, lazy-unmounted and execution falls through to recreate the bind mount which allowing the pod to recover.\r\n\r\n#### Which issue(s) this PR is related to:\r\nFix: #139123\r\n\r\n#### Special notes for your reviewer:\r\nUnit test:\r\n\t/tmp/subpath.test -test.v -test.run \"TestIsStaleMountDefault|TestPrepareSubpathTargetStaleRemount|TestSubpath_PrepareSafeSubpath|TestBindSubPath\"\r\n\t\r\n\t=== RUN   TestBindSubPath\r\n\t--- PASS: TestBindSubPath (0.01s)\r\n\t=== RUN   TestSubpath_PrepareSafeSubpath\r\n\t--- PASS: TestSubpath_PrepareSafeSubpath (0.00s)\r\n\t=== RUN   TestIsStaleMountDefault\r\n\t--- PASS: TestIsStaleMountDefault (0.00s)\r\n\t=== RUN   TestPrepareSubpathTargetStaleRemount\r\n\t--- PASS: TestPrepareSubpathTargetStaleRemount (0.00s)\r\n\tPASS\r\n\r\ne2e-node test:\r\n\r\n> /var/lib/e2e_node_stale.test  --v=2 --k8s-bin-dir='/var/lib/k8s-nfix' --test.v -prepull-images=false \\                                                                                                                             \r\n>     --system-spec-file='/tmp/minikube-sysspec.yaml' --container-runtime-endpoint='unix:///var/run/crio/crio.sock' \\                                                                                      \r\n>     --node-name='minikube' --ginkgo.focus='should remount stale subpath bind mount after FUSE daemon restart' \\                                                                 \r\n>     > /tmp/nfix-test-out.log 2>&1\r\n\r\n_without fix:_\r\n\r\n>        [FAILED] pod A's container never reached Running state after kubelet restart — the stale FUSE bind mount was NOT detected and remounted;\r\n>      check kubelet logs for prepareSubpathTarget errors: context deadline exceeded\r\n>        In [It] at: /Users/xxxx/projects/kubernetes-glusterfs-failure/test/e2e_node/subpath_stale_mount_test.go:391 @ 05/22/26 09:16:46.288\r\n>      ------------------------------\r\n>      SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS \r\n> \r\n>      Summarizing 1 Failure:\r\n>        [FAIL] [sig-node] Kubelet subpath stale bind mount [LinuxOnly] stale bind mount after simulated FUSE network filesystem disruption [It]\r\n>      should remount stale subpath bind mount after FUSE daemon restart [LinuxOnly] [Disruptive] [Serial] [sig-node, Serial, Disruptive]\r\n>        /Users/xxxx/projects/kubernetes-glusterfs-failure/test/e2e_node/subpath_stale_mount_test.go:391\r\n> \r\n>      Ran 1 of 1208 Specs in 326.205 seconds\r\n>      FAIL! -- 0 Passed | 1 Failed | 0 Pending | 1207 Skipped\r\n>      --- FAIL: TestE2eNode (326.28s)\r\n>      FAIL\r\n\r\n_with fix_\r\n\r\n> Will run 1 of 1208 specs\r\n>        W0522 09:00:20.617211   67031 test_context.go:505] Unable to find in-cluster config, using default host : https://127.0.0.1:6443/\r\n>        I0522 09:00:20.617258   67031 test_context.go:528] The --provider flag is not set. Continuing as if --provider=skeleton had been used.\r\n>        I0522 09:00:20.617377   67031 feature_gate.go:477] \"Updated\" featureGates={}\r\n>        I0522 09:00:20.617429   67031 feature_gate.go:477] \"Updated\" featureGates={}\r\n>      === RUN   TestE2eNode\r\n>      Validating os...\r\n>      OS: Linux\r\n>      Validating kernel...\r\n>      KERNEL_VERSION: 6.8.0-100-generic\r\n>      Validating cgroups...\r\n>      Validating package...\r\n>      --- PASS: TestE2eNode (0.00s)\r\n>      PASS\r\n>      SSSSSSS \r\n>      Ran 1 of 1208 Specs in 60.314 seconds\r\n>      SUCCESS! -- 1 Passed | 0 Failed | 0 Pending | 1207 Skipped\r\n>      --- PASS: TestE2eNode (60.39s)\r\n>      PASS\r\n\r\n#### Does this PR introduce a user-facing change?\r\nYes\r\n```release-note\r\nFix(kubelet):  pods with subPath mounts stuck in error loop after FUSE/GlusterFS network filesystem disruption.\r\n\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\nNA",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-25T08:37:56Z",
+      "merged_at": "2026-06-23T13:24:37Z",
+      "author": "yuehaii",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "lgtm",
+        "sig/storage",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139457": {
+      "title": "Fix job controller reporting active=0 during pod creation backoff",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139457",
+      "body": "<!--\r\nThanks for sending a pull request! Here are some tips for you:\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind regression\r\n/sig apps\r\n\r\n#### What this PR does / why we need it\r\n\r\nWhen the Job controller's manageJob() needs to create replacement pods but defers creation because a pod-failure backoff is still active, it returned a hardcoded active=0 to the caller. Since no pods were actually created or deleted, this left status.active=0 while status.ready still reflected the running pods.\r\n\r\nThe apiserver rejects such an update with a 422 (cannot set more ready pods than active). That failed update then blocks the controller from flushing uncounted terminated pods, removing finalizers, and updating job status — leaving pods stuck Terminating with stale status.\r\n\r\nBoth backoff early-returns (the global path and the per-index backoffLimitPerIndex path) now return the real active count. Regression tests are added for both paths.\r\n\r\n#### Which issue(s) this PR fixes\r\n\r\nFixes #139428\r\n\r\n#### Special notes for your reviewer\r\n\r\nThis became visible as 422 errors only after the ready <= active validation was introduced in 1.31 alongside managedBy reaching Beta — hence /kind regression.\r\n\r\n```release-note\r\nFixed a regression where the Job controller could attempt to report `status.active` as 0 while replacement Pod creation was deferred due to pod-failure backoff, causing the Job status update to be rejected by the apiserver. This could delay flushing uncounted terminated Pods, finalizer removal, and Job status updates, leaving Pods stuck `Terminating` and the Job with stale status until the backoff elapsed.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-03T06:06:31Z",
+      "merged_at": "2026-06-11T06:04:41Z",
+      "author": "akhilsingh-git",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "priority/important-longterm",
+        "ok-to-test",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "139503": {
+      "title": "Handling syscall failures when hns is not running.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139503",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR improves Windows kube-proxy resiliency during transient HNS downtime scenarios.\r\nCurrently, when HNS is temporarily unavailable (for example during HNS restart/recovery), syscall failures from HNS APIs such as GetLoadBalancer are interpreted by kube-proxy as the LoadBalancer being absent. As a result, kube-proxy resets the internal LoadBalancer state/ID and later attempts to recreate the same LoadBalancer.\r\nHowever, the original HNS LoadBalancer objects may still exist and can later be restored via the HNS rehydration mechanism. This leads to duplicate create attempts failing with:\r\n\r\n``` hcnCreateLoadBalancer failed in Win32: Cannot create a file when that file already exists. (0xb7) ```\r\n\r\nThis PR ensures transient HNS syscall failures are handled correctly and are no longer treated as definitive \"LoadBalancer not found\" conditions. This prevents kube-proxy from unnecessarily resetting LoadBalancer state during temporary HNS outages.\r\n\r\nThe fix improves:\r\n\r\n- kube-proxy resiliency during HNS restart/recovery\r\n- Windows node networking stability\r\n- LoadBalancer reconciliation correctness under stress/restart scenarios\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nFixes #139519\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThe issue can be reproduced reliably by:\r\n\r\n- Restarting HNS continuously in a loop\r\n- Simultaneously scaling service backend pods up/down rapidly\r\n\r\nThe core issue is a race between:\r\n\r\n- kube-proxy SyncProxyRules execution, and\r\n- temporary HNS unavailability during restart\r\n\r\nThis PR specifically changes the handling of syscall failures when HNS is unavailable so that kube-proxy does not incorrectly assume that the HNS LoadBalancer object has been deleted.\r\nValidation performed:\r\n\r\n- HNS restart stress testing\r\n- Rapid pod scaling during HNS restart\r\n- Verification that duplicate LoadBalancer create failures no longer occur\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nFixed a Windows kube-proxy issue where transient HNS downtime during restart/recovery could cause incorrect LoadBalancer state reconciliation, resulting in duplicate LoadBalancer creation failures with \"Cannot create a file when that file already exists. (0xb7)\" errors.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n```docs\r\n\r\n```\r\n\r\n\r\n/sig windows\r\n/area kube-proxy",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-04T13:07:28Z",
+      "merged_at": "2026-06-12T19:22:47Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/XL",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139629": {
+      "title": "kube-proxy: clear stale conntrack entries for UDP services with no endpoints",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139629",
+      "body": "#### What type of PR is this?\n\n/kind bug\n/kind regression\n/sig network\n\n#### What this PR does / why we need it:\n\nThe conntrack reconciler skips services without serving endpoints, so conntrack entries established while endpoints existed are never removed when a UDP service scales down to zero:\n\n```go\n// a Service without endpoints does not require to clean the conntrack entries associated.\nif endpoints.Len() == 0 {\n    continue\n}\n```\n\nThe REJECT (iptables) / reject (nftables) rule installed for such services does not cover those pre-existing flows: packets are DNATed to the deleted endpoint IP by conntrack before the rule, which matches on the service IP, is evaluated. One-way UDP senders (e.g. statsd clients, `[UNREPLIED]` entries) refresh the 30s conntrack timeout with every packet, so the stale flows blackhole traffic to the deleted pod IP indefinitely; recovery only happens when the service gets an endpoint again (the reconciler then processes the service and removes the entries, which is also why this bug is invisible in any N->M>0 transition).\n\nThis is a regression versus <=1.31, where the event-based cleanup (`DeletedUDPEndpoints`) cleared entries for every deleted UDP endpoint regardless of how many endpoints remained.\n\nThis PR processes such services with an empty endpoints set instead of skipping them, so every existing entry directed to their ClusterIP, LoadBalancer IP and ExternalIP frontends is treated as stale and deleted. New flows still cannot create entries (REJECT prevents conntrack confirmation), so there is nothing new to clean on subsequent syncs and no steady-state overhead beyond the one cleanup.\n\nNodePort cleanup remains skipped for services without serving endpoints: NodePort entries are matched on the destination port only, and with an empty endpoints set that would also remove UDP flows not owned by kube-proxy (e.g. pod egress to an unrelated host on the same port number). This limitation is documented in the code and pinned by the updated test.\n\n`TestServiceWithoutEndpoints` asserted the old behavior (entries preserved) and is updated to assert deletion of all entries directed to the service IP frontends, while preserving non-UDP entries, entries not directed to a service frontend, and *:NodePort entries. The updated test fails against the previous code (9 entries remain vs 3 expected).\n\nReal-world impact observed (v1.33.5, statsd at ~64k pkt/s cluster-wide): after scaling the statsd-exporter service to 0, every sender kept DNAT-ing to the deleted pod IP for 13 hours; the traffic converged on the node owning the deleted pod IP and was dropped in NET_RX, holding one 8-core node at 60-73% softirq until the service was scaled back up. Verified with `kubeproxy_conntrack_reconciler_deleted_entries_total`: unchanged on the 1->0 sync, +1 (the stale entry) immediately on 0->1. Full analysis and reproduction steps in the linked issue.\n\n#### Which issue(s) this PR fixes:\n\nFixes #139628\n\n#### Special notes for your reviewer:\n\nThe skip originates from the #127318 review discussion, where the REJECT rule was considered sufficient protection for services without endpoints. That reasoning holds for new flows but not for previously established ones, which bypass the filter rule via early DNAT. iptables and nftables modes share this code path; IPVS is unaffected (`expire_nodest_conn=1`).\n\nAI assistance disclosure: this fix was developed with AI assistance (Claude Code); the bug analysis, reproduction and the change were reviewed and verified by a human.\n\n#### Does this PR introduce a user-facing change?\n\n```release-note\nkube-proxy now removes stale conntrack entries when a UDP service no longer has any serving endpoints (e.g. scaled down to zero), preventing previously established one-way UDP flows from being blackholed to deleted pod IPs indefinitely.\n```\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-10T20:33:10Z",
+      "merged_at": "2026-06-12T07:56:49Z",
+      "author": "Bafff",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "139667": {
+      "title": "fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139667",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\nfixes https://github.com/kubernetes/kubeadm/issues/3315\r\n\r\n#### What this PR does / why we need it:\r\n\r\nDuring `kubeadm join`, the mandatory `kubeadm-config` ConfigMap fetch\r\nuses `GetConfigMapWithShortRetry`, which has a 350ms polling budget.\r\nThe GET call uses `context.Background()` instead of the polling context,\r\nso when the API server is slow to respond, a single attempt blocks for\r\nup to 10 seconds (the client timeout from `ToClientSet`), exhausting\r\nthe polling budget with no retry. Since this call site has no fallback,\r\nthe join fails.\r\n\r\nThis PR adds a `shortConfigMapGet` parameter to\r\n`FetchInitConfigurationFromCluster` and `getInitConfigurationFromCluster`:\r\n\r\n- When `false` (used by `kubeadm join`, `kubeadm upgrade`, `kubeadm certs`):\r\n  the `kubeadm-config` ConfigMap is fetched using `KubernetesAPICallTimeout`\r\n  (default 1 minute, user-configurable) with retries. This is consistent\r\n  with how `getAPIEndpointFromPodAnnotation` handles API calls in the same\r\n  file, and gives the mandatory fetch a longer retry window.\r\n\r\n- When `true` (used by `kubeadm reset`): the existing\r\n  `GetConfigMapWithShortRetry` is used, preserving the fast fallback\r\n  behavior for callers that don't need a long retry.\r\n\r\n`GetConfigMapWithShortRetry` itself is not modified.\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nRelated to https://github.com/kubernetes/kubeadm/issues/3294\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThe issue was observed in Cluster API e2e tests where `kubeadm join`\r\nfor a worker node would fail because the API server was temporarily\r\nslow to respond through the control plane endpoint. The discovery\r\nphase (cluster-info from kube-public) would succeed after retries,\r\nbut the immediately following ConfigMap fetch would make a single\r\nattempt and fail.\r\n\r\nA standalone reproduction test is available at:\r\nhttps://gist.github.com/damdo/14f02f7398de1797ee0a8025334aa4de\r\n\r\nRelated:\r\n- https://github.com/kubernetes/kubeadm/issues/3294\r\n- https://github.com/kubernetes/kubernetes/pull/138449\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nkubeadm: during \"kubeadm join\", use the KubernetesAPICall timeout\r\n(default 1 minute) when fetching the kubeadm-config ConfigMap, instead\r\nof the short 350ms retry used for optional component configs. A new\r\nshortConfigMapGet parameter is added to FetchInitConfigurationFromCluster\r\nso that callers like \"kubeadm reset\" can still use the short retry.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-12T08:46:48Z",
+      "merged_at": "2026-06-17T03:49:23Z",
+      "author": "damdo",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139732": {
+      "title": "DRA: Fix duplicated configs reported in resourceclaim status",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139732",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind bug\r\n/wg device-management\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nFix duplicated configs reported in resourceclaim status. This happens when a config is pointing to multiple requests.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nhttps://github.com/kubernetes/kubernetes/issues/139730\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFix duplicated configs reported in resourceclaim status\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nNONE\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-14T21:37:02Z",
+      "merged_at": "2026-06-16T14:47:20Z",
+      "author": "LionelJouin",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "139755": {
+      "title": "Expose a way to wait for a controller listener to be fully shutdown",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139755",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind bug\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nAdd a way to wait on run finishing when closing an event handler.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nAdd a way to wait on run finishing when closing an event handler.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-15T17:55:38Z",
+      "merged_at": "2026-06-17T21:22:49Z",
+      "author": "michaelasp",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139842": {
+      "title": "kubeadm: treat already promoted learner as successful",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139842",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR makes the etcd learner promotion path more resilient to transient client-side failures.\r\n\r\nDuring investigation of intermittent etcd-join failures, I observed a scenario where MemberPromote() could return an error such as DeadlineExceeded, while the promotion may already have succeeded on the etcd side.\r\n\r\nIn that situation, kubeadm currently treats the promotion as failed and retries. However, if the learner has already been promoted to a voting member, subsequent calls can return below log:\r\n\r\n```bash\r\netcdserver: can only promote a learner member\r\n```\r\n\r\nand kubeadm may continue retrying until the etcd-join phase fails.\r\n\r\nThis change re-checks the learner state after a failed MemberPromote() call. If the member is no longer a learner, kubeadm treats the promotion as successful and continues.\r\n\r\nThe fallback success path also re-lists members and adds the promoted member endpoint to preserve the existing endpoint update behavior that normally occurs when MemberPromote() succeeds and returns a response.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nFixes [kubernetes/kubeadm#3317](https://github.com/kubernetes/kubeadm/issues/3317)\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThis implementation follows the discussion in #3317.\r\n\r\nThe goal is not to change the promotion flow itself, but to make the retry path idempotent when the promotion has already completed on the etcd side but the client observed a transient error.\r\n\r\nA unit test has been added to cover the scenario where:\r\n\r\n1. `MemberPromote()` returns DeadlineExceeded\r\n2. The member is already a voting member when queried afterward\r\n3. `kubeadm` treats the operation as successful\r\n4. The member endpoint is still added to the client endpoint list\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkubeadm: Improved resilience of kubeadm etcd learner promotion. kubeadm now correctly handles cases where learner promotion succeeds on the etcd side but a transient client-side error is returned, preventing unnecessary etcd-join failures.\r\n```\r\n\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nNone.\r\nSee kubernetes/kubeadm#3317  for background and investigation details.\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-18T11:26:23Z",
+      "merged_at": "2026-06-22T06:31:43Z",
+      "author": "jihyun-huh",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "138999": {
+      "title": "client-go: add Config.GenerateKey in certificate_manager.go",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138999",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\n```\r\nAdd a new field GenerateKey in the Config struct that allows\r\nthe user to set a custom function that would generate\r\na private key of their choice.\r\n\r\nIf the field is not set, the default remains:\r\n  ecdsa.GenerateKey(elliptic.P256(), rand.Reader)\r\n\r\nAdd unit tests for this code path, with key fixtures\r\nand function overloading to avoid additional key generation.\r\n\r\nEnforce minimum bits on the generated keys to ensure\r\nthey are secure with the function validateKeyStrength().\r\nFor RSA the minimum key size is 2048, for ECDSA the minimum\r\ncurve bits are 256. Unit test this function too.\r\n```\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nfixes https://github.com/kubernetes/kubernetes/issues/138987\r\n\r\n#### Special notes for your reviewer:\r\n\r\nNONE\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nclient-go: allow passing a custom GenerateKey field in the Config structure of the certificate manager.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-12T14:07:44Z",
+      "merged_at": "2026-06-16T19:47:21Z",
+      "author": "neolit123",
+      "labels": [
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "sig/auth",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139237": {
+      "title": "webhook use resolved endpoint IP instead of cached",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139237",
+      "body": "Previously, the webhook transport was switched from HTTP/2 to HTTP/1.1 to work around HTTP/2's single-connection multiplexing, which prevented concurrent requests from load-balancing across multiple backend pods. However, under HTTP/1.1, connections are kept alive and cached as idle in the transport's pool.\r\n\r\nBecause Go's http.Transport keys its connection cache by the request's URL Host (in this case the service name) and we overrode the DialContext to perform dynamic endpoint resolution, when a new request is sent, if there is an idle connection in the pool matching the service hostname, the connection is reused and the dialer is skipped.\r\n\r\n/kind bug\r\n/kind feature\r\n\r\n```release-note\r\nKube-apiserver, when using --enable-aggregator-routing=true,  now load-balances requests evenly across all admission webhook endpoints. This ensures connection caching does not route all concurrent requests to a single backend endpoint. Cluster administrators can temporarily opt out of this new behavior using the `WebhookRoundTripLoadBalancing` feature gate (Beta, default `true`).\r\n```\r\n\r\nFixes: https://github.com/kubernetes/kubernetes/issues/127335\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-21T21:37:05Z",
+      "merged_at": "2026-06-10T20:19:54Z",
+      "author": "aojea",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/XL",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139238": {
+      "title": "Optimize PVC ref count aggregation via delta counts",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139238",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind feature\r\n/sig scheduling\r\n/sig scalability\r\n/cc @macsko @mengqiy @hakuna-matatah \r\n\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR fixes a performance issue in kube-scheduler that its throughput (in pods/sec) tapers down significantly when processing large number of pods with PVC mounts. See more details in the original issue below:\r\n\r\nFixes: https://github.com/kubernetes/kubernetes/issues/138426\r\n\r\nThe following graph shows the throughput stayed healthy for scheduling 100k pods with pre-provisioned PVC mounts, where the throughput is mostly above 300 while before the fix the throughput can drop down to 10~20.\r\n\r\n<img width=\"864\" height=\"477\" alt=\"Screenshot 2026-05-21 at 4 14 40 PM\" src=\"https://github.com/user-attachments/assets/d7b41e7a-a62e-4bd6-9056-c6136016d734\" />\r\n\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\n- https://github.com/kubernetes/kubernetes/issues/138426\r\n\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nOptimized kube-scheduler performance for Pods with PersistentVolumeClaim mounts by processing only delta counts between scheduling cycles.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nNONE\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-21T22:17:52Z",
+      "merged_at": "2026-06-24T12:16:27Z",
+      "author": "yue9944882",
+      "labels": [
+        "area/test",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139282": {
+      "title": "KEP-5311 Promote relaxed validation for Services names to GA",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139282",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nPromotes KEP-5311 to GA (locked to enabled)\r\n\r\n#### Which issue(s) this PR is related to:\r\nKEP: https://github.com/kubernetes/enhancements/issues/5311\r\n\r\n#### Special notes for your reviewer:\r\n\r\nThere is an e2e test in test/e2e/network/dns.go that needs to become a conformance test, I plan to do that in its own PR\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nRelaxed DNS names for Services is now GA.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: https://github.com/kubernetes/enhancements/issues/5311\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-25T17:22:50Z",
+      "merged_at": "2026-06-13T00:14:51Z",
+      "author": "adrianmoisey",
+      "labels": [
+        "sig/network",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139308": {
+      "title": "Introduce WatchListCompression feature gate",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139308",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nThis PR introduces the `WatchListCompression` feature gate (Beta, enabled by default).\r\nWhen enabled `WatchList` responses are compressed with `gzip` for clients that include `Accept-Encoding: gzip`. Regular `Watch` requests are unaffected.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\nFirst we should merge https://github.com/kubernetes/enhancements/pull/6088\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nThis PR introduces the `WatchListCompression` feature gate (Beta, enabled by default).\r\nWhen enabled `WatchList` responses are compressed with `gzip` for clients that include `Accept-Encoding: gzip`. Regular `Watch` requests are unaffected.\r\n\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-05-26T18:29:57Z",
+      "merged_at": "2026-06-18T12:58:48Z",
+      "author": "p0lyn0mial",
+      "labels": [
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139407": {
+      "title": "feat: Create CompositePodGroup feature gate",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139407",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n/sig scheduling\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nThis PR implements the CompositePodGroup feature gate. This implements [KEP-6012](https://github.com/kubernetes/enhancements/pull/6017) which is about to get merged.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\nKEP:  [KEP-6012](https://github.com/kubernetes/enhancements/pull/6017)\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nAdded a feature gate for Composite Pod Group.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: [KEP-6012](https://github.com/kubernetes/enhancements/pull/6017)\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n- [KEP]: https://github.com/kubernetes/enhancements/pull/6017\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-01T10:54:14Z",
+      "merged_at": "2026-06-15T23:37:21Z",
+      "author": "jdzikowski",
+      "labels": [
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139632": {
+      "title": "KEP-4222: Support CBOR encoding for non-resource endpoints.",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139632",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n/kind feature\r\n/sig api-machinery\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis adds wiring to support CBOR as a response encoding for the discovery endpoints and structured errors returned from filters.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nKEP: https://github.com/kubernetes/enhancements/issues/4222\r\n\r\nThis is a beta requirement for the CBOR KEP.\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nAdded CBOR as a supported encoding for discovery endpoints and structured errors when the `CBORServingAndStorage` feature gate is enabled.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n- [KEP]: https://kep.k8s.io/4222\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-10T20:58:44Z",
+      "merged_at": "2026-06-23T21:10:26Z",
+      "author": "benluddy",
+      "labels": [
+        "area/test",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/L",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139648": {
+      "title": "KEP-2021: Promote HPAScaleToZero feature gate to beta",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139648",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThis PR enables the `HPAScaleToZero` feature gate by default.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nKEP: https://github.com/kubernetes/enhancements/issues/2021\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nHPA: Enable scaling to and from zero by default.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n- [KEP]: https://github.com/kubernetes/enhancements/issues/2021\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-11T15:28:59Z",
+      "merged_at": "2026-06-24T16:06:20Z",
+      "author": "johanneswuerbach",
+      "labels": [
+        "area/test",
+        "priority/backlog",
+        "lgtm",
+        "release-note",
+        "sig/autoscaling",
+        "size/L",
+        "kind/feature",
+        "sig/apps",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "139735": {
+      "title": "bump coredns to v1.14.4",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139735",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\ncoredns release is built with Go 1.26.4 - https://github.com/coredns/coredns/releases/tag/v1.14.4\r\n\r\n\r\n#### Special notes for your reviewer:\r\n- [x] pending on - https://github.com/coredns/corefile-migration/pull/101\r\n- [x] image promotion: https://github.com/kubernetes/k8s.io/pull/9607\r\n\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nBump coredns to 1.14.4\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-15T06:21:15Z",
+      "merged_at": "2026-06-23T13:24:44Z",
+      "author": "yashsingh74",
+      "labels": [
+        "lgtm",
+        "area/provider/gcp",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "sig/cloud-provider",
+        "needs-priority",
+        "area/dependency",
+        "needs-triage"
+      ]
+    },
+    "139968": {
+      "title": "Register APIServer informers for metrics and naming",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139968",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind feature\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nAdds metrics and name to apiserver informers, allowing us to have metrics per informer in the apiserver. \r\n\r\n#### Which issue(s) this PR is related to:\r\nN/A\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nAdd informer metrics to apiserver\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-23T17:59:05Z",
+      "merged_at": "2026-06-24T21:34:49Z",
+      "author": "michaelasp",
+      "labels": [
+        "area/test",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "triage/accepted"
+      ]
+    },
+    "139651": {
+      "title": "Align DeviceTaintRule informer API version with handlers",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139651",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind bug\r\n/kind failing-test\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nThe [ci-dra-integration](https://testgrid.k8s.io/sig-node-dynamic-resource-allocation#ci-dra-integration) job is currently failing since the v1.37.0-alpha.1 tag was published which moves the DRA upgrade/downgrade test baseline version from 1.35 to 1.36. Between 1.35 and 1.36, the ResourceSlice tracker used by kube-scheduler updated its DeviceTaintRule API version from v1alpha3 to v1beta2, but the event handlers in the tracker continued to expect v1alpha3. The upgrade/downgrade tests follow code paths not exercised by the e2e tests which induce a panic in kube-scheduler that appears to be the root cause of the failure:\r\n```\r\nE0611 12:22:26.198231   60568 iface.go:275] \"Observed a panic\" panic=\"interface conversion: interface {} is *v1beta2.DeviceTaintRule, not *v1alpha3.DeviceTaintRule\" panicGoValue=\"&runtime.TypeAssertionError{_interface:(*abi.Type)(0x1bd9b20), concrete:(*abi.Type)(0x1fef720), asserted:(*abi.Type)(0x1fedc20), missingMethod:\\\"\\\"}\" stacktrace=<\r\n\tgoroutine 364 [running]:\r\n\tk8s.io/apimachinery/pkg/util/runtime.logPanic({0x2155bd0, 0xec45a6bf5f0}, {0x1c442e0, 0xec45a6bf500})\r\n\t\tk8s.io/apimachinery/pkg/util/runtime/runtime.go:134 +0xbc\r\n\tk8s.io/apimachinery/pkg/util/runtime.handleCrash({0x2155bd0, 0xec45a6bf560}, {0x1c442e0, 0xec45a6bf500}, {0x0, 0x0, 0xec45a94a828?})\r\n\t\tk8s.io/apimachinery/pkg/util/runtime/runtime.go:109 +0x116\r\n\tk8s.io/apimachinery/pkg/util/runtime.HandleCrashWithLogger({{0x2160508?, 0xec45a248fc0?}, 0xec45a2c1dc0?}, {0x0, 0x0, 0x0})\r\n\t\tk8s.io/apimachinery/pkg/util/runtime/runtime.go:93 +0x10f\r\n\tpanic({0x1c442e0?, 0xec45a6bf500?})\r\n\t\truntime/panic.go:860 +0x13a\r\n\tk8s.io/dynamic-resource-allocation/resourceslice/tracker.typedSlice[...](...)\r\n\t\tk8s.io/dynamic-resource-allocation/resourceslice/tracker/tracker.go:739\r\n\tk8s.io/dynamic-resource-allocation/resourceslice/tracker.(*Tracker).syncSlice(0xec45a2c1cc0, {0x2155c08, 0xec45a30b950}, {0xec45a36e000, 0x3e}, 0x1)\r\n\t\tk8s.io/dynamic-resource-allocation/resourceslice/tracker/tracker.go:634 +0x1357\r\n\tk8s.io/dynamic-resource-allocation/resourceslice/tracker.(*Tracker).resourceSliceAdd.func1({0x1fe22a0?, 0xec45ac42000})\r\n\t\tk8s.io/dynamic-resource-allocation/resourceslice/tracker/tracker.go:428 +0x2df\r\n\tk8s.io/client-go/tools/cache.ResourceEventHandlerFuncs.OnAdd(...)\r\n\t\tk8s.io/client-go/tools/cache/controller.go:301\r\n\tk8s.io/client-go/tools/cache.(*processorListener).run.func1(0xec45a94af5f, 0xec45a7f0270, {0x1d54580?, 0xec45a7be0f0?})\r\n\t\tk8s.io/client-go/tools/cache/shared_informer.go:1360 +0x2ca\r\n\tk8s.io/client-go/tools/cache.(*processorListener).run(0xec45a7f0270)\r\n\t\tk8s.io/client-go/tools/cache/shared_informer.go:1370 +0x3c\r\n\tk8s.io/apimachinery/pkg/util/wait.(*Group).Start.func1()\r\n\t\tk8s.io/apimachinery/pkg/util/wait/wait.go:72 +0x4c\r\n\tcreated by k8s.io/apimachinery/pkg/util/wait.(*Group).Start in goroutine 355\r\n\t\tk8s.io/apimachinery/pkg/util/wait/wait.go:70 +0x73\r\n >\r\npanic: interface conversion: interface {} is *v1beta2.DeviceTaintRule, not *v1alpha3.DeviceTaintRule [recovered, repanicked]\r\n```\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFixed a bug when the DRADeviceTaintRules feature is enabled that caused kube-scheduler to panic when DeviceTaintRules exist and ResourceSlices are changed or to ignore new changes to DeviceTaintRules.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-11T17:57:53Z",
+      "merged_at": "2026-06-12T07:56:56Z",
+      "author": "nojnhuh",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "kind/failing-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "134860": {
+      "title": "Port service/proxy subresource from Endpoints to EndpointSlice",
+      "url": "https://github.com/kubernetes/kubernetes/pull/134860",
+      "body": "#### What this PR does / why we need it:\r\nFollowup to #129837; it turns out there was another use of Endpoints in the apiserver that I hadn't noticed before because it used the internal APIs.\r\n\r\nThis ends up duplicating a bunch of `staging/src/k8s.io/apiserver/pkg/util/proxy/proxy.go` into `pkg/registry/core/service/storage/storage.go`, but there's no good way to make them share the code because one uses v1 and one uses the internal version. Though, it's possible that using the internal version of a different API group like I did is wrong and I should have gone \"the long way\" through the apiserver instead of reading directly from etcd? I'm not especially familiar with the registry/storage code...\r\n\r\n`pkg/registry/core/service/storage/storage_test.go:TestServiceRegistryResourceLocation` was the only user of `pkg/api/endpoints/testing`, so I removed that. (I didn't bother porting it to EndpointSlices, given that nobody else was using it anyway...)\r\n\r\nThe first commit removes some Endpoints-specific code that had a TODO pointing out that (a) it might not really be necessary, and (b) it ought to be ported to EndpointSlice. Given that this has been basically a no-op for years now, it seems that it wasn't really necessary.\r\n\r\nThe second commit just refactors the service storage unit test so it doesn't get more complicated in the final commit when we have to have two fake etcd storages since registrytest only deals with a single API group at a time.\r\n\r\n#### Which issue(s) this PR is related to:\r\nKEP: https://github.com/kubernetes/enhancements/issues/4974\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nThe `service/proxy` subresource of the apiserver now uses the EndpointSlices\r\nof the service rather than the Endpoints. (This will have no effect unless you\r\nwere previously using that API with a Service for which you constructed the\r\nEndpoints by hand _and_ disabled EndpointSlice mirroring of them.)\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n```docs\r\n- [KEP]: https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/4974-deprecate-endpoints\r\n```\r\n\r\n/kind cleanup\r\n/sig network\r\n/assign @liggitt ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2025-10-24T16:26:51Z",
+      "merged_at": "2026-06-10T21:40:51Z",
+      "author": "danwinship",
+      "labels": [
+        "priority/important-soon",
+        "sig/network",
+        "kind/cleanup",
+        "area/apiserver",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/XL",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139731": {
+      "title": "DRA: Empty requests field in config status of resourceclaim when the config applies to all requests",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139731",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind cleanup\r\n/wg device-management\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\nEmpty the unnecessary requests fields in configs of the resourceclaim status for the configs pointing to all requests. The API defines that an empty requests fields points to all requests.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nhttps://github.com/kubernetes/kubernetes/issues/135074\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nEmpty requests field in config status of resourceclaim when the config applies to all requests\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\nNONE\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-14T21:36:17Z",
+      "merged_at": "2026-06-16T15:55:20Z",
+      "author": "LionelJouin",
+      "labels": [
+        "kind/cleanup",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "139760": {
+      "title": "update the error message, to make it to be more explict for windows",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139760",
+      "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n/kind cleanup\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind dependency\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\nAdd more info to the error message to make it more explicit for windows nodee\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nkubelet: the Topology Manager now returns a clearer error when the `prefer-closest-numa-nodes` policy option is enabled on a windows node that does not expose NUMA distance information, explaining that the option is not supported there.\r\n\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-15T22:55:04Z",
+      "merged_at": "2026-06-22T18:05:56Z",
+      "author": "zylxjtu",
+      "labels": [
+        "area/kubelet",
+        "kind/cleanup",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/XS",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {
+    "139278": {
+      "title": "Allow for minCount mutability in Workload and PodGroup APIs",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139278",
+      "body": "Allow modifying minCount as proposed in https://github.com/kubernetes/enhancements/pull/6076\n\n/sig scheduling\n/assign",
+      "state": "closed",
+      "created_at": "2026-05-25T12:55:55Z",
+      "closed_at": "2026-06-17T13:38:44Z",
+      "author": "antekjb",
+      "labels": [
+        "sig/scheduling",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139740": {
+      "title": "Rename PodGroupScheduled condition to PodGroupInitiallyScheduled",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139740",
+      "body": "As disgusted in https://github.com/kubernetes/enhancements/pull/6076#discussion_r3246860996 we would like to change name of PodGroupScheduled to something more fitting its behaviour. \n\n/sig scheduling\n/wg workload-aware-scheduling\n/assign",
+      "state": "closed",
+      "created_at": "2026-06-15T08:33:06Z",
+      "closed_at": "2026-06-17T14:46:52Z",
+      "author": "antekjb",
+      "labels": [
+        "sig/scheduling",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "135299": {
+      "title": "PodReadyToStartContainers condition lacks diagnostic message when pods stuck in ContainerCreating",
+      "url": "https://github.com/kubernetes/kubernetes/issues/135299",
+      "body": "### What happened?\n\n When a pod gets stuck in `ContainerCreating` state, the `PodReadyToStartContainers` condition is set to False but provides no Message or Reason explaining why the pod sandbox cannot be created. This makes it extremely\n  difficult for users and operators to understand where in the pod startup process the pod is stuck and what is blocking it.\n\n### What did you expect to happen?\n\nThe `PodReadyToStartContainers` condition should include a descriptive `Message` field explaining why the pod is not ready to start containers, similar to how other pod conditions provide diagnostic information.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n1. Deploy a pod that will get stuck during sandbox creation (e.g., due to network issues, CNI failures, or resource constraints)\n  2. Observe the pod status with `kubectl describe pod <pod-name>` or `kubectl get pod <pod-name> -o yaml`\n  3. Note that the `PodReadyToStartContainers` condition shows `Status: False` but has no `Message` field\n\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\n# paste output here\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\n\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\n# paste output here\n$ uname -a\n# paste output here\n\n# On Windows:\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\n# paste output here\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "closed",
+      "created_at": "2025-11-14T02:28:56Z",
+      "closed_at": "2026-06-15T16:55:20Z",
+      "author": "harche",
+      "labels": [
+        "kind/bug",
+        "sig/node",
+        "triage/accepted"
+      ]
+    },
+    "120613": {
+      "title": "Kubelet crashed due to thread exhaustion",
+      "url": "https://github.com/kubernetes/kubernetes/issues/120613",
+      "body": "### What happened?\r\n\r\nBelow was stack trace of crash:\r\n```\r\nkubelet[2767716]: runtime: program exceeds 10000-thread limit\r\nkubelet[2767716]: fatal error: thread exhaustion\r\n kubelet[2767716]: runtime stack:\r\n kubelet[2767716]: runtime.throw({0x468f19a?, 0x46cba0?})\r\nkubelet[2767716]:         /usr/lib/go-1.18/src/runtime/panic.go:992 +0x71\r\n kubelet[2767716]: runtime.checkmcount()\r\n kubelet[2767716]:         /usr/lib/go-1.18/src/runtime/proc.go:763 +0x8c\r\n kubelet[2767716]: runtime.mReserveID()\r\n kubelet[2767716]:         /usr/lib/go-1.18/src/runtime/proc.go:779 +0x36\r\n kubelet[2767716]: runtime.startm(0xc0001a8a00, 0x0)\r\n```\r\nFrom kubelet logs, Validated around 10000 threads, majority are with this stack trace\r\n```\r\n kubelet[2767716]: goroutine 63494 [select, 39 minutes]:\r\n kubelet[2767716]: k8s.io/kubernetes/vendor/github.com/godbus/dbus/v5.(*signalChannelData).deferredDeliver(0xc00201c1e0, 0xc0008fa778?)\r\n kubelet[2767716]:         vendor/github.com/godbus/dbus/v5/default_handler.go:332 +0x69\r\n Aug 04 18:36:09  kubelet[2767716]: created by k8s.io/kubernetes/vendor/github.com/godbus/dbus/v5.(*signalChannelData).deliver\r\n kubelet[2767716]:         vendor/github.com/godbus/dbus/v5/default_handler.go:327 +0xea\r\n```\r\n```\r\nTop shows kubelet using ~80GB of memory (as well as enormous CPU utilization)\r\n\r\n    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\r\n2849677 root      20   0  264.2g  78.5g  64520 S  5983   3.9  10338:12 kubelet\r\n```\r\n### What did you expect to happen?\r\n\r\nKubelet not to crash and keep memory and thread footprint low\r\n\r\n\r\n### How can we reproduce it (as minimally and precisely as possible)?\r\n\r\nBy injecting error in loginD or dbus logic, this should be reproducible.\r\n\r\n\r\n### Anything else we need to know?\r\n\r\nTraced down the kubelet where [these threads ](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/default_handler.go#L331)are getting created in Loop:\r\nReference to kubelet code: https://github.com/kubernetes/kubernetes/blob/release-1.24/pkg/kubelet/nodeshutdown/nodeshutdown_manager_linux.go#L181\r\n ```\r\n// Start starts the node shutdown manager and will start watching the node for shutdown events.\r\nfunc (m *managerImpl) Start() error {\r\n\tstop, err := m.start()\r\n\tif err != nil {\r\n\t\treturn err\r\n\t}\r\n\tgo func() {\r\n\t\tfor { >>> NEVER ENDING FOR LOOP, Till m.start send stop()\r\n\t\t\tif stop != nil {\r\n\t\t\t\t<-stop\r\n\t\t\t}\r\n\r\n\t\t\ttime.Sleep(dbusReconnectPeriod)\r\n\t\t\tklog.V(1).InfoS(\"Restarting watch for node shutdown events\")\r\n\t\t\tstop, err = m.start()\r\n\t\t\tif err != nil {\r\n\t\t\t\tklog.ErrorS(err, \"Unable to watch the node for shutdown events\")\r\n\t\t\t}\r\n\t\t}\r\n\t}()\r\n\r\nfunc (m *managerImpl) start() (chan struct{}, error) {\r\n\tsystemBus, err := systemDbus() >>>> Created Dbus thread to deliver signal which we see in logs\r\n\tif err != nil {\r\n\t\treturn nil, err\r\n\t}\r\n\tm.dbusCon = systemBus\r\n\r\n\tcurrentInhibitDelay, err := m.dbusCon.CurrentInhibitDelay()\r\n\tif err != nil {\r\n\t\treturn nil, err        >>> If Error happens here or anywhere below, Dbus connections are not closed, thereby threads of dbus just keeps hanging\r\n\t}\r\n\r\n      .....\r\n       .....\r\n\t........\r\n}\r\n```\r\nsystemDbus() --> systemd.NewDBusCon() --> [dbus.SystemBus](https://github.com/kubernetes/kubernetes/blob/release-1.24/pkg/kubelet/nodeshutdown/systemd/inhibit_linux.go#L52C15-L52C31)()  --> [ConnectSystemBus()](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/conn.go#L132) --> [conn.Auth()](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/conn.go#L159) --> [go.conn.inworker()](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/auth.go#L118) --> [conn.HandleSign()](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/conn.go#L432) --> [conn.SignalHandler.DeliverSignal()](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/conn.go#L472) --> [signalChannelData.deliverSignal](https://github.com/kubernetes/kubernetes/blob/master/vendor/github.com/godbus/dbus/v5/default_handler.go#L320) (this is what we see in stack trace)\r\n\r\n### Kubernetes version\r\n\r\n1.24\r\n<details>\r\n\r\n```console\r\n$ kubectl version\r\n# paste output here\r\n```\r\n\r\n</details>\r\n\r\n\r\n### Cloud provider\r\n\r\n<details>\r\n\r\n</details>\r\n\r\n\r\n### OS version\r\n\r\n<details>\r\n\r\n```console\r\n# On Linux:\r\n$ cat /etc/os-release\r\n# paste output here\r\n$ uname -a\r\n# paste output here\r\n\r\n# On Windows:\r\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\r\n# paste output here\r\n```\r\n\r\n</details>\r\n\r\n\r\n### Install tools\r\n\r\n<details>\r\n\r\n</details>\r\n\r\n\r\n### Container runtime (CRI) and version (if applicable)\r\n\r\n<details>\r\n\r\n</details>\r\n\r\n\r\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\r\n\r\n<details>\r\n\r\n</details>\r\n",
+      "state": "closed",
+      "created_at": "2023-09-12T18:38:01Z",
+      "closed_at": "2026-06-24T20:06:20Z",
+      "author": "arpitsardhana",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "sig/node",
+        "triage/accepted"
+      ]
+    },
+    "133927": {
+      "title": "The allocatable and capacity values ​​for \"ephemeral-storage\" under node.status are not displayed in the same format.",
+      "url": "https://github.com/kubernetes/kubernetes/issues/133927",
+      "body": "### What happened?\n\nI'm checking the status of a node and noticed that the base of the **\"ephemeral-storage\"** field in the allocatable and capacity fields is inconsistent. The \"ephemeral-storage\" field under allocatable is in **binary format**, while the \"ephemeral-storage\" field under capacity is in **decimal format**. Is this intentional or a bug?\n\n<img width=\"2346\" height=\"162\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/a4e6b742-4e22-43b5-a229-464fd06c6bd7\" />\n\n### What did you expect to happen?\n\nI think they should be in the same format.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nkubectl get node xxx -ojsonpath='{.status.allocatable}'\n\nkubectl get node xxx -ojsonpath='{.status.capacity}'\n\nThen, compare them.\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\n<details>\n\nClient Version: v1.32.3\nKustomize Version: v5.5.0\nServer Version: v1.32.3\n\n</details>\n\n\n### Cloud provider\n\n<details>\nLocal private cluster installed via kubeadm.\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\nPRETTY_NAME=\"Ubuntu 24.04.2 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.2 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n\n$ uname -a\nLinux master-new 6.8.0-78-generic #78-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 12 11:34:18 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux\n\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\ncontainerd github.com/containerd/containerd/v2 v2.0.4 1a43cb6a1035441f9aca8f5666a9b3ef9e70ab20\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "closed",
+      "created_at": "2025-09-08T09:40:07Z",
+      "closed_at": "2026-06-11T08:54:44Z",
+      "author": "chuqing1997",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "sig/node",
+        "triage/accepted"
+      ]
+    },
+    "138422": {
+      "title": "Pod with deletion timestamp, may end up in unscheduledPods of PodGroupState indefinitely",
+      "url": "https://github.com/kubernetes/kubernetes/issues/138422",
+      "body": "### What happened?\n\nhttps://github.com/kubernetes/kubernetes/blob/b2f73c0d6b427e2ab5ba225375aaefc0b9bc45b2/pkg/scheduler/backend/cache/cache.go#L412\n\n`Cache.ForgetPod()` is called through two different chains of actions:\n1. \"Pod is updated and has a deletion timestamp set\"\n2. \"Unreserve and Forget\"\n\nIn both flows, `Cache.forgetPodGroupMember()` is called eventually.\n\nIn the case of \"Pod is updated and has a deletion timestamp set\":\n`Pod` ends up in `unscheduledPods` of corresponding `podGroupState` indefinitely.\n\n\n\n### What did you expect to happen?\n\nPod must be deleted entirely from `podGroupState` (possibly through `Cache.removePodGroupMember()`)\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nAdding the following test case to `TestUpdatePod()` in `pkg/scheduler/eventhandlers_test.go`:\n```\n{\n\tname:                   \"delete assumed pod group member with deletion timestamp\",\n\toldPod:                 unscheduledPodGroupMember,\n\tassumedPod:             scheduledPodGroupMember,\n\tnewPod:                 podGroupMemberWithDeletionTimestamp,\n\tgenericWorkloadEnabled: true,\n}\n```\n\nWould fail\n\n### Anything else we need to know?\n\nNone.\n\n### Kubernetes version\n\nv1.36\n\n\n### Cloud provider\n\nN/A\n\n### OS version\n\nN/A\n\n### Install tools\n\nN/A\n\n### Container runtime (CRI) and version (if applicable)\n\nN/A\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\nN/A",
+      "state": "closed",
+      "created_at": "2026-04-16T14:52:11Z",
+      "closed_at": "2026-06-23T09:34:40Z",
+      "author": "iomarsayed",
+      "labels": [
+        "kind/bug",
+        "sig/scheduling",
+        "needs-triage",
+        "wg/workload-aware-scheduling"
+      ]
+    },
+    "139428": {
+      "title": "Job controller manageJob() returns active=0 during backoff, causing \"cannot set more ready pods than active\" status update rejection",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139428",
+      "body": "### What happened?\n\nWhen the Job controller's `manageJob()` function determines that replacement pods are needed but a backoff timer is active (due to recent pod failures), it returns `active=0` to the caller. The caller uses this value to set `job.Status.Active=0` in a status update, while `job.Status.Ready` retains the real informer-computed count. The apiserver validation `RejectMoreReadyThanActivePods` (GA in 1.33 via `JobManagedBy`) correctly rejects this inconsistent update with 422.\n\nBecause the status update fails, the controller cannot:\n- Flush `uncountedTerminatedPods`\n- Remove `batch.kubernetes.io/job-tracking` finalizers from terminated pods\n\nThis causes pods to appear stuck in Terminating state and job status to become stale.\n\n**Root cause:** Two locations in `manageJob()` return a hardcoded `0` instead of the real `active` count when backoff is active:\n\n```go\n// Location 1: global backoff\nif remainingTime > 0 {\n    jm.enqueueSyncJobWithDelay(logger, job, remainingTime)\n    return 0, metrics.JobSyncActionPodsCreated, nil  // BUG: should be `active`\n}\n\n// Location 2: per-index backoff\nif remainingTime > 0 {\n    jm.enqueueSyncJobWithDelay(logger, job, remainingTime)\n    return 0, metrics.JobSyncActionPodsCreated, nil  // BUG: should be `active`\n}\n```\n\nThe caller sets `job.Status.Active = active` (the returned 0), while `job.Status.Ready` stays at the informer count (e.g., 5). Result: `5 > 0` → 422.\n\nThe `0` was likely a \"don't care\" value from before `RejectMoreReadyThanActivePods` validation existed. Every other return path in `manageJob` returns the real active count.\n\n### What did you expect to happen?\n\nThe backoff early-return in `manageJob()` should return the real active pod count (unchanged, since no pods were created or deleted), not 0.\n\nProposed fix:\n```diff\n     if remainingTime > 0 {\n         jm.enqueueSyncJobWithDelay(logger, job, remainingTime)\n-        return 0, metrics.JobSyncActionPodsCreated, nil\n+        return active, metrics.JobSyncActionPodsCreated, nil\n     }\n```\n\nReturning `active` (initialized at top of `manageJob` as `int32(len(jobCtx.activePods))`) means \"I didn't create or delete any pods\" — the correct semantics for a backoff deferral.\n\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n```bash\n# 1. Create a Job\ncat <<'EOF' | kubectl apply -f -\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: repro-ready-active\n  namespace: default\nspec:\n  parallelism: 30\n  completions: 30\n  backoffLimit: 500\n  completionMode: Indexed\n  template:\n    spec:\n      restartPolicy: Never\n      containers:\n      - name: worker\n        image: registry.k8s.io/pause:3.9\n        resources:\n          requests:\n            cpu: \"10m\"\n            memory: \"16Mi\"\nEOF\n\n# 2. Wait for all pods to be Running+Ready\nkubectl wait --for=condition=Ready pods -l job-name=repro-ready-active --timeout=120s\n\n# 3. Force-delete 25 pods simultaneously\nkubectl get pods -l job-name=repro-ready-active -o name | head -25 | \\\n  xargs -P25 kubectl delete --force --grace-period=0\n\n# 4. Observe: job status is frozen, KCM logs show error\nkubectl get job repro-ready-active -o jsonpath='active={.status.active} ready={.status.ready} failed={.status.failed}'\n# Output: active=30 ready=30 failed=   (stale — doesn't reflect reality)\n\n# KCM logs show:\n# \"Unhandled Error\" err=\"syncing job: tracking status: adding uncounted pods to status:\n#   Job.batch \\\"repro-ready-active\\\" is invalid: status.ready: Invalid value: 5:\n#   cannot set more ready pods than active\"\n\n# 5. Bug self-resolves after ~10 min when backoff expires (if no new failures arrive)\n```\n\n### Anything else we need to know?\n\n- The bug fires on any multi-pod Job that experiences a pod failure while other pods are still Ready. For single failures (10s backoff), it produces a few 422 errors that self-resolve. For mass failures (spot reclamation, node failure → backoff capped at 10 min), it causes visible stuck pods and stale status for the full backoff duration.\n- No data loss occurs. The job eventually completes. The impact is operational: stuck Terminating pods, stale status, KCM error log spam.\n- The `metrics.JobSyncActionPodsCreated` label on the return is also incorrect (no pods were created), but that's cosmetic.\n\n\n### Kubernetes version\n\n<details>\n\nBug present from 1.31 (when `RejectMoreReadyThanActivePods` was introduced, beta default-on) through latest master. Unconditional from 1.33 (`JobManagedBy` GA).\n\nTested and reproduced on 1.35.\n\n\n</details>\n\n\n### Cloud provider\n\n<details>\nAWS (EKS), but not cloud-specific. Reproducible on any cluster.\n</details>\n\n\n### OS version\n\nN/A\n\n\n### Install tools\n\nN/A\n\n### Container runtime (CRI) and version (if applicable)\n\n_No response_\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n\n",
+      "state": "closed",
+      "created_at": "2026-06-02T04:58:01Z",
+      "closed_at": "2026-06-11T06:04:42Z",
+      "author": "snarkychef",
+      "labels": [
+        "kind/bug",
+        "sig/apps",
+        "priority/important-longterm",
+        "triage/accepted"
+      ]
+    },
+    "139519": {
+      "title": "Windows KubeProxy fails to recreate LoadBalancer after HNS restart with error \"hcnCreateLoadBalancer failed in Win32: Cannot create a file when that file already exists. (0xb7)\"",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139519",
+      "body": "### What happened?\n\nDuring HNS restart stress scenarios combined with rapid pod scale operations, Windows KubeProxy intermittently fails to recreate LoadBalancers and logs the following error:\n\n``` hcnCreateLoadBalancer failed in Win32: Cannot create a file when that file already exists. (0xb7) ```\n\nWhile HNS was temporarily unavailable, KubeProxy attempted to reconcile proxy rules. During this window:\n\n- GetHNSNetwork failed because HNS was down.\n- KubeProxy proceeded with LoadBalancer cleanup logic.\n- GetLoadBalancer calls also failed due to HNS unavailability.\n- KubeProxy incorrectly interpreted these failures as the LoadBalancer being absent and reset the internal LoadBalancer ID/state.\n\nHowever, the actual HNS LoadBalancer objects were never deleted. After HNS restarted, the LoadBalancers were restored through the HNS backup/restore (rehydration) mechanism.\nLater, when KubeProxy attempted to recreate the same LoadBalancer/frontend configuration, the operation failed because the LoadBalancer already existed in HNS.\n\n### What did you expect to happen?\n\nKubeProxy should treat HNS unavailability as a transient failure and avoid resetting/deleting LoadBalancer state when HNS APIs are temporarily inaccessible.\nKubeProxy should:\n\n- Distinguish transient HNS communication failures from actual “LoadBalancer not found” conditions.\n- Retry reconciliation after HNS becomes healthy instead of assuming LoadBalancer absence.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n1. Create a Kubernetes Service backed by a deployment with 8 pods.\n2. Continuously restart HNS in a loop with a 100 ms sleep interval (100 iterations).\n3. Simultaneously scale the deployment up and down in a loop with a 100 ms sleep interval (100 iterations).\n4. Observe repeated LoadBalancer creation failures in KubeProxy logs.\n\nExample log monitoring command:\n\n``` cat C:\\k\\kubeproxy.err.log | sls \"hcnCreateLoadBalancer failed in Win32\" ```\n\nObserved error:\n\n``` hcnCreateLoadBalancer failed in Win32: Cannot create a file when that file already exists. (0xb7) ```\n\n### Anything else we need to know?\n\nThe issue appears to be caused by a race between:\n\n- HNS availability during restart/recovery, and\n- KubeProxy reconciliation logic.\n\nThe problem is specifically observed when:\n\n- SyncProxyRules executes while HNS is temporarily unavailable.\n- KubeProxy resets LoadBalancer state based on transient HNS API failures.\n- HNS later restores existing LoadBalancers through rehydration.\n\nThis leaves KubeProxy and HNS state inconsistent, causing duplicate LoadBalancer creation attempts.\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\n1.34\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\nAKS\n</details>\n\n\n### OS version\n\n<details>\n\n```console\nWindows 2022, 2025\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "closed",
+      "created_at": "2026-06-05T12:37:03Z",
+      "closed_at": "2026-06-12T19:22:48Z",
+      "author": "princepereira",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "sig/windows",
+        "lifecycle/active",
+        "needs-triage"
+      ]
+    },
+    "139628": {
+      "title": "kube-proxy: stale UDP conntrack entries are never cleaned up when a service scales down to zero endpoints",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139628",
+      "body": "### What happened?\n\nWhen a UDP service with active senders is scaled down to zero endpoints, the conntrack entries established while the endpoints existed are never removed. The conntrack reconciler introduced in v1.32 (#127318) skips services without serving endpoints:\n\n```go\n// pkg/proxy/conntrack/cleanup.go\n// a Service without endpoints does not require to clean the conntrack entries associated.\nif endpoints.Len() == 0 {\n    continue\n}\n```\n\nThe `REJECT` rule installed for a service with no endpoints does not help for those pre-existing flows: packets are DNATed to the (deleted) endpoint IP by conntrack before the filter rule, which matches on the service ClusterIP, can be evaluated. For one-way UDP traffic (statsd/dogstatsd-style, conntrack entries permanently `[UNREPLIED]`), every packet refreshes the 30s `nf_conntrack_udp_timeout`, so the stale entries and the blackholed traffic persist indefinitely.\n\nIn our production case (statsd at ~64k pkt/s cluster-wide), all senders kept DNAT-ing to the deleted pod IP for 13 hours. All that traffic converges on the node that owns the deleted pod IP's CIDR block and is dropped there in `NET_RX`, which held a single 8-core node at ~60-73% softirq for the whole duration. Recovery is instant once the service gets an endpoint again, because the reconciler then processes the service and deletes every entry whose reply-source is not the new endpoint.\n\nObserved evidence on v1.33.5 (iptables mode, controlled reproduction, ~3.5 min after scaling to 0, kube-proxy already synced):\n\n```\n# REJECT rule is installed:\n-A KUBE-SERVICES -d 10.0.200.123/32 -p udp -m comment --comment \"test/udp-sink:statsd has no endpoints\" -j REJECT --reject-with icmp-port-unreachable\n\n# yet the stale entry persists and keeps refreshing (pod 10.244.5.127 deleted minutes ago):\nudp 17 29 src=10.244.9.181 dst=10.0.200.123 sport=12345 dport=9125 [UNREPLIED] src=10.244.5.127 dst=10.244.9.181 sport=9125 dport=12345\n\n# reconciler ran but deleted nothing:\nkubeproxy_conntrack_reconciler_deleted_entries_total{ip_family=\"IPv4\"} 1151   # unchanged\n\n# after scaling back to 1 replica: counter 1151 -> 1152, entry deleted, traffic restored instantly\n```\n\nThis is a regression versus <=1.31: the event-based cleanup (`DeletedUDPEndpoints` in the pre-reconciler `CleanStaleEntries`) cleared entries for every deleted UDP endpoint regardless of how many endpoints remained, so the N->0 transition was covered.\n\n### What did you expect to happen?\n\nScaling a UDP service to zero endpoints removes the conntrack entries DNAT-ing to the deleted endpoints, the same way scaling from N to M>0 does. New packets then hit the `REJECT` rule (which also prevents new conntrack entries from being confirmed), and senders receive ICMP port-unreachable instead of blackholing traffic to a deleted pod IP forever.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n1. Create a UDP deployment + ClusterIP service (port 9125), 1 replica.\n2. From a pod on a different node, send UDP to the ClusterIP from a single long-lived socket (fixed source port) at any steady rate, e.g. 5 pkt/s:\n   `while true; do echo ping; sleep 0.2; done | nc -u -p 12345 <ClusterIP> 9125`\n3. `kubectl scale deploy/<name> --replicas=0` and wait for the pod to be deleted.\n4. On the sender's node, run `conntrack -L -p udp --orig-port-dst 9125`. The entry persists indefinitely (timeout refreshed by every packet), DNAT-ing to the deleted pod IP, even though `iptables-save | grep \"has no endpoints\"` shows the REJECT rule. `kubeproxy_conntrack_reconciler_deleted_entries_total` does not increase.\n5. `kubectl scale --replicas=1`: the entry is deleted on the next sync (counter increments), confirming the reconciler handles the service again as soon as it has an endpoint.\n\n### Anything else we need to know?\n\n- The skip was discussed in the #127318 review: the rationale was that the REJECT rule protects services without endpoints. That holds for new flows (REJECT prevents conntrack confirmation) but not for flows established before the endpoints were removed, which bypass the rule via early DNAT.\n- iptables and nftables modes share this code path; both are affected. IPVS is not (`expire_nodest_conn=1`).\n- Mitigations we use: never scale one-way UDP services to 0; emergency fix is scaling back to >=1 replica (instant) or `conntrack -D -p udp --orig-port-dst <port>` on sender nodes.\n- We have a fix ready and will open a PR shortly.\n\n### Kubernetes version\n\n<details>\n\nObserved on v1.33.5 (AKS, kube-proxy iptables mode). The skip is still present in master (`pkg/proxy/conntrack/cleanup.go`).\n\n</details>\n\n### Cloud provider\n\n<details>\n\nAKS (Azure CNI Overlay), but the issue is provider-independent; reproduced with plain kube-proxy + conntrack.\n\n</details>\n\n/kind bug\n/sig network\n",
+      "state": "closed",
+      "created_at": "2026-06-10T20:32:14Z",
+      "closed_at": "2026-06-12T07:56:50Z",
+      "author": "Bafff",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "triage/accepted"
+      ]
+    },
+    "139730": {
+      "title": "DRA: Duplicated configs reported in resourceclaim status",
+      "url": "https://github.com/kubernetes/kubernetes/issues/139730",
+      "body": "### What happened?\n\nWhen creating a resourceclaim, the status will reports more config than it should. Each config will be reported the amount of request it is pointing to. \n\nThis also means that, if we create 32 requests (the allowed limit), and create 3 configs that points to all requests (so 32, this is also allowed), the allocator would want to report 96 configs (3*32) in the status, which would be over the allowed limit of 64 status configs.\n\nDoes this has to be backported, what do you think?\n\n### What did you expect to happen?\n\nOnly 1 config should be reported in the resourceclaim status,\n```yaml\napiVersion: resource.k8s.io/v1             \nkind: ResourceClaim                        \nmetadata:\n  name: demo\nspec:\n  devices:\n   config: # Only 1 config is added.\n    - opaque:\n        driver: my-example-driver\n        parameters:\n          deviceAttribute: deviceAttributeValue\n      requests:\n      - request1\n      - request2\n    requests:\n    - name: request1\n      exactly:\n        allocationMode: ExactCount\n        count: 1\n        deviceClassName: hostnetworkdevice\n    - name: request2\n      exactly:\n        allocationMode: ExactCount\n        count: 1\n        deviceClassName: hostnetworkdevice\nstatus:\n  allocation:\n    devices:\n      config: # 2 Configs are reported.\n      - opaque:\n          driver: my-example-driver\n          parameters:\n            deviceAttribute: deviceAttributeValue\n        requests:\n        - request1\n        - request2\n        source: FromClaim\n      - opaque:\n          driver: my-example-driver\n          parameters:\n            deviceAttribute: deviceAttributeValue\n        requests:\n        - request1\n        - request2\n        source: FromClaim\n      results:\n      - consumedCapacity:\n          my-example-driver/maxVirtualInterfaces: \"1\"\n        device: dummy0\n        driver: my-example-driver\n        pool: kind-worker\n        request: request1\n        shareID: 951590b1-52ef-4c3b-a833-ff3da230b4d2\n      - consumedCapacity:\n          my-example-driver/maxVirtualInterfaces: \"1\"\n        device: dummy0\n        driver: my-example-driver\n        pool: kind-worker\n        request: request2\n        shareID: 409917c8-41c3-411b-93c2-02d049f8aa85\n    nodeSelector:\n      nodeSelectorTerms:\n      - matchFields:\n        - key: metadata.name\n          operator: In\n          values:\n          - kind-worker\n  reservedFor:\n  - name: demo\n    resource: pods\n    uid: 14a83f57-89ec-4fda-ba9e-3f9470f886d2\n```\n\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n```yaml\napiVersion: resource.k8s.io/v1             \nkind: ResourceClaim                        \nmetadata:\n  name: demo\nspec:\n  devices:\n   config: # Only 1 config is added.\n    - opaque:\n        driver: my-example-driver\n        parameters:\n          deviceAttribute: deviceAttributeValue\n      requests:\n      - request1\n      - request2\n    requests:\n    - name: request1\n      exactly:\n        allocationMode: ExactCount\n        count: 1\n        deviceClassName: hostnetworkdevice\n    - name: request2\n      exactly:\n        allocationMode: ExactCount\n        count: 1\n        deviceClassName: hostnetworkdevice\n```\n\n### Anything else we need to know?\n\n/wg device-management\n\n### Kubernetes version\n\n<details>\n\n```console\nClient Version: v1.36.2\nKustomize Version: v5.8.1\nServer Version: v1.36.1\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\n\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\n# paste output here\n$ uname -a\n# paste output here\n\n# On Windows:\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\n# paste output here\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+      "state": "open",
+      "created_at": "2026-06-14T21:24:28Z",
+      "closed_at": null,
+      "author": "LionelJouin",
+      "labels": [
+        "kind/bug",
+        "sig/node",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    },
+    "138987": {
+      "title": "client-go certificate manager hardcodes ECDSA P-256 key type with no way to configure it",
+      "url": "https://github.com/kubernetes/kubernetes/issues/138987",
+      "body": "### What happened?\n\nThe `generateCSR()` function in `staging/src/k8s.io/client-go/util/certificate/certificate_manager.go` hardcodes the key type to ECDSA P-256:\n\n```go\nprivateKey, err := ecdsa.GenerateKey(elliptic.P256(), cryptorand.Reader)\n```\n\nThis means all kubelet client and server certificates generated via the certificate manager use ECDSA P-256, regardless of what key type the cluster CA uses. There is no configuration option to override this.\n\nThe kubelet client certificate on the first control plane node is initially generated by `kubeadm` using the same key type as the cluster CA (typically RSA 2048), but on subsequent rotations it switches to ECDSA P-256 because rotation goes through client-go's hardcoded path.\n\n### What did you expect to happen?\n\nThe key type for CSR generation should be configurable via the `CertificateManager` `Config` struct, similar to how `GetUsages` is already a configurable function. For example:\n\n```go\ntype Config struct {\n    // ...existing fields...\n\n    // GenerateKey allows overriding the default key generation (ECDSA P-256).\n    // If nil, defaults to ecdsa.GenerateKey(elliptic.P256(), rand.Reader).\n    GenerateKey func() (crypto.Signer, error)\n}\n```\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n1. Deploy a Kubernetes cluster with an RSA CA (default `kubeadm init` behavior).\n2. Inspect the kubelet client certificate on the first control plane node — it uses RSA (same as CA).\n3. Wait for certificate rotation (or force it by shortening cert lifetime).\n4. After rotation, inspect the new kubelet client certificate — it is now ECDSA P-256.\n5. On worker nodes, kubelet client and server certificates are ECDSA P-256 from the start.\n\nThe hardcoded line is at:\n[`staging/src/k8s.io/client-go/util/certificate/certificate_manager.go#L767`](https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/util/certificate/certificate_manager.go#L767)\n\n### Anything else we need to know?\n\n- Environments requiring RSA keys (compliance, HSM compatibility, consistency with CA) cannot use built-in certificate rotation without patching client-go.\n- Some deployments require ECDSA P-384 as P-256 is not considered sufficient under their security policies. The hardcoded P-256 makes this impossible without forking client-go.\n- The `GetUsages` callback already handles the key-type-dependent usage selection, so the infrastructure for key-type awareness exists — only the generation itself is not configurable.\n\n### Kubernetes version\n\n<details>\n\n```console\nall current versions (verified on master)\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\nany / not specific\n</details>\n\n\n### OS version\n\n<details>\n\n```console\nany\n```\n\n</details>\n\n\n### Install tools\n\n<details>\nkubeadm\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\nnot applicable\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\nnot applicable\n</details>\n",
+      "state": "closed",
+      "created_at": "2026-05-12T07:34:04Z",
+      "closed_at": "2026-06-16T19:47:22Z",
+      "author": "zhiland",
+      "labels": [
+        "kind/feature",
+        "sig/auth",
+        "triage/accepted"
+      ]
+    },
+    "127335": {
+      "title": "API Server Keeps Using Open TCP Connections to Terminating Admission Controller Pods",
+      "url": "https://github.com/kubernetes/kubernetes/issues/127335",
+      "body": "### What happened?\n\nI am encountering an issue where the Kubernetes API server continues to use open TCP connections to an admission controller pod after it has been marked as unready and removed from the service endpoints.\r\n\r\n### My Setup\r\n\r\n- I have a `ValidatingWebhookConfiguration` pointing to my service `admission-controller`, which uses an `ignore` failure policy.\r\n- The `admission-controller` deployment consists of multiple pods, each running an HTTP server. The service selector targets all pods in the deployment, leading to multiple endpoints.\r\n- Upon pod termination, the goal is to perform a graceful shutdown by:\r\n  - Marking the pod as unready.\r\n  - Waiting until the pod is removed from the service endpoints.\r\n  - Handling inflight messages before shutting down the pod.\r\n \r\n### The Issue\r\nOnce a pod is marked as unready, it is correctly removed from the service endpoints and does not receive new connections—this is expected behavior.\r\nHowever, the pod continues to receive HTTP requests over old open TCP connections. \r\n\r\nThis leads to two major problems:\r\n\r\n1. I cannot close the TCP connections on the server side because it may result in a potential loss of requests from the API server.\r\n2. There is no defined deadline for when the connection gets closed on the client side, leaving it open indefinitely unless manually terminated.\r\n\r\nAdditionally, I discovered that the API server does not retry requests (and opens a new TCP connection) if it encounters a closed connection.\r\n\r\n### Stress Test Results\r\nI performed a test to further diagnose the issue:\r\n\r\n1. Deployed one `admission-controller` pod in the deployment (intended to block all requests).\r\n2. Ran the following command: \r\n   ```kubectl rollout restart deployment admission-controller```\r\n   - A new pod was created, and the old pod began terminating.\r\n   - The old pod closed the server as soon as it became unready.\r\n4. Sent 1000 requests to create a pod to simulate stress.\r\n\r\n#### Expected Result\r\nNo pods should be created, as the `admission-controller` should block all the requests.\r\n\r\n#### Actual Result\r\nSome pods were created during each run. There appears to be a small window of time where the cluster is unprotected, and the API server does not receive a response because of the failurePolicy (ignore). As a result, it proceeds with pod creation.\r\n\r\n### Impact\r\nThis is particularly concerning because during that window where old TCP connections are still in use, the API server can bypass the admission controller, leading to potential security risks.\r\n\r\n### What I’ve Tried\r\nI attempted to gracefully handle the shutdown by waiting for connections to close naturally, but I am unable to define a clear deadline or force the API server to retry on connection closure.\r\n\r\n\r\nAny assistance or guidance on how to address this issue would be greatly appreciated.\n\n### What did you expect to happen?\n\n1. The TCP connections used by the API server should have a reasonable time-to-live, allowing the pod to wait long enough to ensure all existing TCP connections are properly closed upon termination.\r\n2. I expect the API server to have a built-in retry mechanism to handle such failures.\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nAs mentioned above using the described setup and stressed tests.\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\n<details>\r\n\r\n```console\r\n$ kubectl version\r\nClient Version: v1.30.2\r\nKustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3\r\nServer Version: v1.30.0\r\n\r\n$ kubectl version\r\nClient Version: v1.30.2\r\nKustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3\r\nServer Version: v1.30.3-gke.1639000\r\n```\r\n\r\nTested on both Minikube and GKE.</details>\r\n\n\n### Cloud provider\n\n<details>\r\nTested on both Minikube and GKE.\r\n</details>\r\n\n\n### OS version\n\n<details>\r\n\r\n```console\r\n# On Linux:\r\n$ cat /etc/os-release\r\n# paste output here\r\n$ uname -a\r\n# paste output here\r\n\r\n# On Windows:\r\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\r\n# paste output here\r\n```\r\n\r\n</details>\r\n\n\n### Install tools\n\n<details>\r\n\r\n</details>\r\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\r\n\r\n</details>\r\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\r\n\r\n</details>\r\n",
+      "state": "closed",
+      "created_at": "2024-09-12T19:57:15Z",
+      "closed_at": "2026-06-10T20:19:55Z",
+      "author": "nitzanzuler",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "sig/api-machinery",
+        "triage/accepted"
+      ]
+    },
+    "138426": {
+      "title": "Degraded scheduler performance due due to PVC mounts",
+      "url": "https://github.com/kubernetes/kubernetes/issues/138426",
+      "body": "### Summary\n\n> Kubernetes version: 1.35.3\n> Scheduler image: registry.k8s.io/kube-scheduler:v1.35.3\n\nWhen kube-scheduler processes pods with PVC mounts, we observed a significant throughput degradation — dropping exponentially from peak performance to approximately 20 pods/s, with indications that throughput continues to decline as the number of scheduled pods increases.\nTrace logs from the scheduler reveal that the bottleneck lies in the cache snapshot phase of the scheduling cycle. As more pods are processed, the time spent in \"Snapshotting scheduler cache and node infos\" grows proportionally, consuming the majority of the scheduling latency:\n\n> I0416 17:36:38.728720      12 trace.go:236] Trace[1050272486]: \"Scheduling\" namespace:pvc-sched-test-1,name:direct-scheduler-throughput-pod-139623 (16-Apr-2026 17:36:38.616) (total time: 112ms):Trace[1050272486]: ---\"Snapshotting scheduler cache and node infos done\" 110ms (17:36:38.727)Trace[1050272486]: [112.052923ms] [112.052923ms] END\n\nBy our further investigation, we found this performance issue stems from the following lines with the schedule loop where there's a for loop to loop over all the PVCs (see the pprof profile graph below):\n\n> https://github.com/kubernetes/kubernetes/blob/b2f73c0d6b427e2ab5ba225375aaefc0b9bc45b2/pkg/scheduler/backend/cache/cache.go#L338-L340\n\n<img width=\"1101\" height=\"619\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/1b86e021-1cd9-4a0d-9234-65d5d81a7da0\" />\n\n\n\n<img width=\"895\" height=\"883\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/750d4229-2b39-462e-b6e1-3ca7f30b6fa4\" />\n\n### Steps to Reproduce\n\nWe can reproduce the performance issue with some customization based on CL2. This test works by preparing a dummy storage class with 200k dummy PV/PVCs, and then we run the standard CL2 scheduler throughput tests to create 200k pods to observe the scheduler throughput performance.\n\n> https://github.com/kubernetes/perf-tests/pull/3943/changes\n\n##### Step#0. Clone the code from above branch \n\n\n##### Step#1. Run the python script to generate 200k PVs\n\n```shell\n# Hard coding namespace to pvc-sched-test-1 so that CL2 creates PVCs in the same namespace\n$ ./clusterloader2/testing/scheduler-throughput/create_pv.py --total 200000 --namespace pvc-sched-test-1\n```\n\n##### Step#2. Run the CL2 config to generate 200k PVCs\n\n```shell\n$ cd clusterloader2\n$ go run cmd/clusterloader.go --testconfig=./testing/scheduler-throughput/config-pvc.yaml --provider=eks --kubeconfig=${HOME}/.kube/config --v=2\n```\n\n##### Step#3. Run the CL2 config to generate 200k Pods\n\n```shell\n$ go run cmd/clusterloader.go --testconfig=./testing/scheduler-throughput/config.yaml --provider=eks --kubeconfig=${HOME}/.kube/config --v=2\n```\n\n#### Step#4. Track the scheduler throughput pattern\n\n\n/sig scheduling\n/sig scalability",
+      "state": "closed",
+      "created_at": "2026-04-16T17:42:59Z",
+      "closed_at": "2026-06-24T12:16:28Z",
+      "author": "yue9944882",
+      "labels": [
+        "needs-sig",
+        "needs-triage"
+      ]
+    },
+    "135074": {
+      "title": "DRA allocation results: smarter \"requests\" field for device class configs",
+      "url": "https://github.com/kubernetes/kubernetes/issues/135074",
+      "body": "### What would you like to be added?\n\nFrom https://github.com/kubernetes/kubernetes/pull/134793#discussion_r2465710724:\n\n> As it stands now, we always set Requests. Would it make sense to detect the special case of \"config applies to all requests\" and then unset the field to take advantage of \"if empty, all requests\"? This applies to both class and request configs.\n>\n> I think the \"all requests\" check can be simplified to a length check: if a config has as many requests name as there are top-level requests, then it covers all. We can ignore sub-requests because each request is satisfied by exactly one sub-request.\n\n/assign @LionelJouin \n\n### Why is this needed?\n\nShorter, more readable allocation results. Semantically it's equivalent.\n",
+      "state": "open",
+      "created_at": "2025-11-03T19:38:03Z",
+      "closed_at": null,
+      "author": "pohly",
+      "labels": [
+        "kind/feature",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    }
+  }
+}
