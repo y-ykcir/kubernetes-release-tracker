@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "generated_at": "2026-07-22T23:47:38.771222",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.7",
+    "name": "v1.35.7",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-07-22T22:28:35Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.7",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.7 是一个维护版本，主要修复了 kubeadm 节点加入的稳定性问题、一个关键的 CRI API 回归问题，并减少了 kubelet 的冗余日志，同时更新了 Go 语言版本以包含安全补丁。",
+    "key_changes": [
+      "修复 kubeadm etcd 成员提升逻辑，避免对已是投票成员的节点进行不必要的 API 调用，从而减少超时和重试 - [PR #138492](https://github.com/kubernetes/kubernetes/pull/138492)",
+      "修复 kubeadm join 时获取 kubeadm-config ConfigMap 的超时策略，使用更合理的 1 分钟超时替代 350ms 短超时，提升复杂网络环境下的成功率 - [PR #139809](https://github.com/kubernetes/kubernetes/pull/139809)",
+      "修复 CRI API 中 KeyValue 字段的 JSON 编码回归，恢复为 1.34 版本之前的字符串编码，确保与容器运行时的兼容性 - [PR #139966](https://github.com/kubernetes/kubernetes/pull/139966)",
+      "kubelet 不再为缺失的可选容器注解记录 V(4) 级别的“Label not found”日志，减少日志噪音和系统负载 - [PR #140321](https://github.com/kubernetes/kubernetes/pull/140321)"
+    ],
+    "important_bugfixes": [
+      "修复 kubeadm etcd learner 提升的健壮性：当 etcd 端提升成功但客户端返回瞬时错误时，kubeadm 现在能正确处理，避免不必要的 etcd-join 失败 - [PR #139909](https://github.com/kubernetes/kubernetes/pull/139909) - **影响：** 提升使用 etcd learner 功能的集群在节点加入或恢复时的成功率",
+      "修复 CRI API JSON 编码回归：此问题可能导致依赖特定 JSON 编码格式的容器运行时或监控工具出现解析错误 - [PR #139966](https://github.com/kubernetes/kubernetes/pull/139966) - **影响：** 修复了从 1.34 版本引入的一个潜在兼容性问题，建议所有用户升级以确保 CRI 交互稳定"
+    ],
+    "security_issues": [
+      "基础镜像更新至 Go 1.25.12：此更新包含了 Go 语言运行时的最新安全修复和漏洞补丁 - [PR #140585](https://github.com/kubernetes/kubernetes/pull/140585) - **风险级别：** 中（建议升级以应用最新的语言级安全修复）"
+    ],
+    "performance_improvements": [
+      "优化 kubeadm etcd 成员提升逻辑，跳过不必要的 API 调用，减少节点加入或恢复时的延迟和资源消耗 - [PR #138492](https://github.com/kubernetes/kubernetes/pull/138492) - **提升：** 减少 etcd 操作超时和重试，加快节点加入过程",
+      "减少 kubelet 冗余日志输出，降低日志系统的存储和索引压力，尤其有利于大规模集群 - [PR #140321](https://github.com/kubernetes/kubernetes/pull/140321) - **提升：** 减少无关日志条目，提升日志可读性和系统效率"
+    ],
+    "breaking_changes": [
+      "此版本无破坏性变更（Breaking Changes）。PR #139966 修复了一个回归问题，实际上是恢复到了之前版本（1.34 之前）的兼容行为。"
+    ],
+    "recommendations": [
+      "**建议升级**：对于运行 1.35 版本且频繁进行节点扩缩容或曾遇到 kubeadm join 超时问题的集群，建议安排升级以获取稳定性修复。",
+      "**升级前验证**：如果集群中使用了自定义的容器运行时或工具与 CRI API 深度交互，建议在测试环境中验证 PR #139966 的修复是否解决了任何潜在的 JSON 解析问题。",
+      "**升级策略**：这是一个补丁版本，风险较低，可以采用滚动升级方式。建议遵循标准的升级流程，先升级控制平面，再升级工作节点。",
+      "**日志监控**：升级后，可以观察 kubelet 日志中关于“Label not found”的冗余信息是否减少，以验证 PR #140321 的修复效果。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。此版本主要为错误修复和稳定性提升，未引入新功能或 API 变更。升级风险主要来自任何版本升级固有的通用风险。建议在常规维护窗口进行升级。需要特别关注的方面是验证节点加入流程（特别是使用 kubeadm 的集群）是否更加稳定，以及确保 CRI 接口的兼容性。"
+  },
+  "statistics": {
+    "analyzed_prs": 6,
+    "analyzed_issues": 0,
+    "important_items": 6
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138492: Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139809: Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139909: Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#139966: [1.35] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#140321: Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#140585: [release-1.35] Bump images and versions to golang 1.25.12 and update distroless-iptables",
+      "reason": "Performance related"
+    }
+  ],
+  "prs": {
+    "138492": {
+      "title": "Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138492",
+      "body": "Cherry pick of #138390 on release-1.35.\n\n#138390: kubeadm: skip promote call when etcd member is already a voting member\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: fix MemberPromote to skip the etcd promote API call when the member is already a voting member, avoiding unnecessary retries and timeout.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-21T02:31:16Z",
+      "merged_at": "2026-07-03T12:26:20Z",
+      "author": "wgkingk",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139809": {
+      "title": "Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139809",
+      "body": "Cherry pick of #139667 on release-1.35.\n\n#139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n/kind bug\n/sig cluster-lifecycle\n/area kubeadm\n\n```release-note\nkubeadm: during \"kubeadm join\", use the KubernetesAPICall timeout\n(default 1 minute) when fetching the kubeadm-config ConfigMap, instead\nof the short 350ms retry used for optional component configs. A new\nshortConfigMapGet parameter is added to FetchInitConfigurationFromCluster\nso that callers like \"kubeadm reset\" can still use the short retry.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-17T09:52:41Z",
+      "merged_at": "2026-06-17T15:50:43Z",
+      "author": "damdo",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139909": {
+      "title": "Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139909",
+      "body": "Cherry pick of #139842 on release-1.35.\n\n#139842: kubeadm: treat already promoted learner as successful\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: Improved resilience of kubeadm etcd learner promotion. kubeadm now correctly handles cases where learner promotion succeeds on the etcd side but a transient client-side error is returned, preventing unnecessary etcd-join failures.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-22T12:26:26Z",
+      "merged_at": "2026-07-03T11:22:27Z",
+      "author": "jihyun-huh",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "139966": {
+      "title": "[1.35] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139966",
+      "body": "Cherry pick of #139964 on release-1.35.\n\n#139964: Restore string JSON encoding of cri-api KeyValue\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\ncri-api: Reverts to pre-1.34 JSON encoding of the KeyValue value field\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-23T17:49:43Z",
+      "merged_at": "2026-07-01T01:50:09Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "140321": {
+      "title": "Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140321",
+      "body": "Cherry pick of #140163 on release-1.35.\n\n#140163: kubelet: stop logging missing optional container annotations\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nKubelet no longer emits V(4) \"Label not found\" logs for missing optional container annotations.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-08T14:27:35Z",
+      "merged_at": "2026-07-18T01:17:26Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "140585": {
+      "title": "[release-1.35] Bump images and versions to golang 1.25.12 and update distroless-iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140585",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to golang 1.25.12 and update distroless-iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nPart of https://github.com/kubernetes/release/issues/4449\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nKubernetes is now built with Go 1.25.12\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/assign @xmudrii @Verolop @saschagrunert \r\n/cc @kubernetes/release-managers ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-15T06:12:17Z",
+      "merged_at": "2026-07-18T03:57:31Z",
+      "author": "palnabarun",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {}
+}
