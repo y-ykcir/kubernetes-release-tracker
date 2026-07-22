@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "generated_at": "2026-07-22T23:47:20.602138",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.35.7",
+    "name": "v1.35.7",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.35.md) for more details.\n\n\n\n",
+    "published_at": "2026-07-22T22:28:35Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.35.7",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.35.7 是一个补丁版本，主要修复了 kubeadm 节点加入的稳定性问题、一个关键的 CRI-API 回归问题，并减少了 kubelet 的日志噪音，提升了集群运维的可靠性。",
+    "key_changes": [
+      "修复 kubeadm etcd 成员重复提升调用，避免不必要的重试和超时 - [PR #138492](https://github.com/kubernetes/kubernetes/pull/138492)",
+      "修复 kubeadm join 时获取配置的超时逻辑，使用更合理的 1 分钟超时替代 350ms 短超时 - [PR #139809](https://github.com/kubernetes/kubernetes/pull/139809)",
+      "提升 kubeadm etcd learner 成员提升的健壮性，正确处理客户端瞬时错误 - [PR #139909](https://github.com/kubernetes/kubernetes/pull/139909)",
+      "修复 CRI-API 中 KeyValue 值的 JSON 编码回归，恢复至 1.34 版本前的字符串编码行为 - [PR #139966](https://github.com/kubernetes/kubernetes/pull/139966)",
+      "kubelet 不再为缺失的可选容器注解记录 V(4) 级别日志，减少日志噪音 - [PR #140321](https://github.com/kubernetes/kubernetes/pull/140321)",
+      "更新构建基础镜像至 Go 1.25.12 并更新 distroless-iptables - [PR #140585](https://github.com/kubernetes/kubernetes/pull/140585)"
+    ],
+    "important_bugfixes": [
+      "修复 kubeadm etcd 成员重复提升问题：当 etcd 成员已是投票成员时，跳过提升 API 调用，避免导致节点加入过程出现不必要的重试和超时失败 - [PR #138492](https://github.com/kubernetes/kubernetes/pull/138492) - **影响：** 使用 kubeadm 管理的高可用 etcd 集群在添加新控制平面节点时会更稳定，减少因重复调用导致的加入失败。",
+      "修复 kubeadm join 配置获取超时：将获取必需的 kubeadm-config ConfigMap 的超时从 350ms 调整为标准的 KubernetesAPICallTimeout（默认1分钟） - [PR #139809](https://github.com/kubernetes/kubernetes/pull/139809) - **影响：** 在 API 服务器响应较慢或网络状况不佳时，`kubeadm join` 命令因获取配置超时而失败的概率显著降低。",
+      "修复 CRI-API JSON 编码回归：恢复 KeyValue 结构中 `value` 字段的字符串 JSON 编码方式，修复了自 1.34 版本以来可能引入的与某些容器运行时的兼容性问题 - [PR #139966](https://github.com/kubernetes/kubernetes/pull/139966) - **影响：** 确保 kubelet 与容器运行时（CRI）的通信兼容性，避免潜在的容器创建或配置失败。此修复对使用自定义或特定版本 CRI 运行时的环境尤为重要。",
+      "修复 kubeadm etcd learner 提升的客户端错误处理：当 etcd 服务端已成功提升 learner 但客户端收到瞬时错误时，kubeadm 现在会将其视为成功，而不是失败 - [PR #139909](https://github.com/kubernetes/kubernetes/pull/139909) - **影响：** 提高了向现有 etcd 集群添加 learner 成员（新控制平面节点）的成功率，增强了集群扩展的鲁棒性。"
+    ],
+    "security_issues": [],
+    "performance_improvements": [
+      "减少 kubeadm etcd 成员管理的不必要 API 调用，优化节点加入流程 - [PR #138492](https://github.com/kubernetes/kubernetes/pull/138492) - **提升：** 减少 etcd 提升操作的重试和潜在超时等待，加快控制平面节点加入速度。",
+      "消除 kubelet 对缺失可选容器注解的冗余日志记录，降低系统日志负载 - [PR #140321](https://github.com/kubernetes/kubernetes/pull/140321) - **提升：** 减少日志文件大小和日志收集系统的处理压力，特别是在大规模集群中。"
+    ],
+    "breaking_changes": [],
+    "recommendations": [
+      "**建议升级：** 对于运行 Kubernetes 1.35 版本且使用 kubeadm 部署的集群，特别是高可用（HA）架构，建议安排升级到此版本，以获取节点加入稳定性的重要修复。",
+      "**升级前测试：** 如果您的环境对容器运行时接口（CRI）有严格依赖或使用非标准运行时，请在测试环境中验证 PR #139966 的修复是否解决了任何潜在的兼容性问题。",
+      "**监控日志变化：** 升级后，观察 kubelet 日志中关于容器注解的 `V(4)` 级别错误信息是否减少，这属于预期行为。",
+      "**kubeadm 操作验证：** 在升级控制平面节点或添加新节点后，验证 `kubeadm` 相关操作（如 `join`, `init phase control-plane`）的日志，确认没有出现与 etcd 成员管理相关的新错误。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。此版本主要为向后兼容的 Bug 修复和稳定性增强，不包含 API 变更、功能废弃或已知的破坏性变更。核心修复针对 kubeadm 和 CRI-API 的特定问题，影响范围有限但重要。建议在常规维护窗口内进行升级。需要特别关注的方面是升级后新节点加入（`kubeadm join`）的行为以及容器运行时（如 containerd, CRI-O）与 kubelet 的交互是否正常。"
+  },
+  "statistics": {
+    "analyzed_prs": 6,
+    "analyzed_issues": 0,
+    "important_items": 6
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138492: Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139809: Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139909: Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#139966: [1.35] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#140321: Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#140585: [release-1.35] Bump images and versions to golang 1.25.12 and update distroless-iptables",
+      "reason": "Performance related"
+    }
+  ],
+  "prs": {
+    "138492": {
+      "title": "Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138492",
+      "body": "Cherry pick of #138390 on release-1.35.\n\n#138390: kubeadm: skip promote call when etcd member is already a voting member\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: fix MemberPromote to skip the etcd promote API call when the member is already a voting member, avoiding unnecessary retries and timeout.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-21T02:31:16Z",
+      "merged_at": "2026-07-03T12:26:20Z",
+      "author": "wgkingk",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139809": {
+      "title": "Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139809",
+      "body": "Cherry pick of #139667 on release-1.35.\n\n#139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n/kind bug\n/sig cluster-lifecycle\n/area kubeadm\n\n```release-note\nkubeadm: during \"kubeadm join\", use the KubernetesAPICall timeout\n(default 1 minute) when fetching the kubeadm-config ConfigMap, instead\nof the short 350ms retry used for optional component configs. A new\nshortConfigMapGet parameter is added to FetchInitConfigurationFromCluster\nso that callers like \"kubeadm reset\" can still use the short retry.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-17T09:52:41Z",
+      "merged_at": "2026-06-17T15:50:43Z",
+      "author": "damdo",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139909": {
+      "title": "Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139909",
+      "body": "Cherry pick of #139842 on release-1.35.\n\n#139842: kubeadm: treat already promoted learner as successful\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: Improved resilience of kubeadm etcd learner promotion. kubeadm now correctly handles cases where learner promotion succeeds on the etcd side but a transient client-side error is returned, preventing unnecessary etcd-join failures.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-22T12:26:26Z",
+      "merged_at": "2026-07-03T11:22:27Z",
+      "author": "jihyun-huh",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "139966": {
+      "title": "[1.35] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139966",
+      "body": "Cherry pick of #139964 on release-1.35.\n\n#139964: Restore string JSON encoding of cri-api KeyValue\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\ncri-api: Reverts to pre-1.34 JSON encoding of the KeyValue value field\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-23T17:49:43Z",
+      "merged_at": "2026-07-01T01:50:09Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "140321": {
+      "title": "Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140321",
+      "body": "Cherry pick of #140163 on release-1.35.\n\n#140163: kubelet: stop logging missing optional container annotations\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nKubelet no longer emits V(4) \"Label not found\" logs for missing optional container annotations.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-08T14:27:35Z",
+      "merged_at": "2026-07-18T01:17:26Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "140585": {
+      "title": "[release-1.35] Bump images and versions to golang 1.25.12 and update distroless-iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140585",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to golang 1.25.12 and update distroless-iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nPart of https://github.com/kubernetes/release/issues/4449\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nKubernetes is now built with Go 1.25.12\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/assign @xmudrii @Verolop @saschagrunert \r\n/cc @kubernetes/release-managers ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-15T06:12:17Z",
+      "merged_at": "2026-07-18T03:57:31Z",
+      "author": "palnabarun",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {}
+}
