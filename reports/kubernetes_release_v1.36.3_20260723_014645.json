@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "generated_at": "2026-07-23T01:47:20.360937",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.36.3",
+    "name": "v1.36.3",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md) for more details.\n\n\n\n",
+    "published_at": "2026-07-23T00:35:52Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.36.3",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.36.3 是一个补丁版本，主要修复了 v1.36 系列中引入的几个关键回归问题，包括 kubelet 内存泄漏、服务器端应用（SSA）兼容性、DRA 资源分配器状态泄漏以及调度器 panic，强烈建议所有 v1.36 用户升级。",
+    "key_changes": [
+      "修复 kubelet Pod 同步导致的内存泄漏回归 - [PR #140066](https://github.com/kubernetes/kubernetes/pull/140066)",
+      "修复服务器端应用（SSA）对可空容器类型进行 patch 时的回归 - [PR #140296](https://github.com/kubernetes/kubernetes/pull/140296)",
+      "修复 DRA 资源分配器在分配失败时未回滚预留状态，导致 Pod 无法调度的问题 - [PR #140663](https://github.com/kubernetes/kubernetes/pull/140663)",
+      "修复启用 DRADeviceTaintRules 功能时，kube-scheduler 可能 panic 或忽略规则更新的问题 - [PR #139681](https://github.com/kubernetes/kubernetes/pull/139681)",
+      "恢复 CRI API 中 KeyValue 字段的 JSON 编码方式，确保与旧版本 CRI 运行时的兼容性 - [PR #139965](https://github.com/kubernetes/kubernetes/pull/139965)"
+    ],
+    "important_bugfixes": [
+      "修复 kubeadm join 时获取 kubeadm-config ConfigMap 使用过短超时（350ms）的问题，现使用标准的 KubernetesAPICallTimeout（默认1分钟） - [PR #139808](https://github.com/kubernetes/kubernetes/pull/139808) - **影响：** 在 API 服务器响应较慢或网络延迟较高时，`kubeadm join` 可能因超时而失败。",
+      "修复 kubeadm 在 etcd learner 成员提升逻辑中的问题，避免因客户端瞬时错误导致不必要的加入失败 - [PR #139910](https://github.com/kubernetes/kubernetes/pull/139910) - **影响：** 提升 etcd learner 节点时可能遇到非必要的失败，影响集群高可用扩展。",
+      "优化 kubeadm 的 etcd MemberPromote 逻辑，当成员已是投票成员时跳过提升调用，避免不必要的重试和超时 - [PR #138493](https://github.com/kubernetes/kubernetes/pull/138493) - **影响：** 提升已投票成员时产生冗余 API 调用和延迟。",
+      "kubelet 停止为缺失的可选容器注解记录 V(4) 级别的“Label not found”日志 - [PR #140322](https://github.com/kubernetes/kubernetes/pull/140322) - **影响：** 减少不必要的日志噪音，提升日志可读性。"
+    ],
+    "security_issues": [
+      "基础镜像和构建工具链更新至 Go 1.26.5 - [PR #140581](https://github.com/kubernetes/kubernetes/pull/140581) - **风险级别：** 低 - 此更新通常包含 Go 语言的安全修复，建议升级以获得最新的安全补丁。"
+    ],
+    "performance_improvements": [
+      "kubeadm join 使用更合理的超时获取配置，减少因网络抖动导致的失败 - [PR #139808](https://github.com/kubernetes/kubernetes/pull/139808) - **提升：** 提高 `kubeadm join` 在非理想网络条件下的成功率。",
+      "kubeadm 优化 etcd 成员提升逻辑，避免冗余调用 - [PR #138493](https://github.com/kubernetes/kubernetes/pull/138493) - **提升：** 减少 etcd 集群管理操作的不必要延迟。"
+    ],
+    "breaking_changes": [
+      "此版本为补丁版本，未引入破坏性变更或 API 变更。所有修复旨在解决 v1.36 中的回归问题并恢复预期行为。"
+    ],
+    "recommendations": [
+      "**立即升级**：如果您正在运行 Kubernetes v1.36.x，尤其是受到上述内存泄漏、SSA 或 DRA 问题影响的集群，建议尽快安排升级到 v1.36.3。",
+      "**测试验证**：升级前，请在测试环境中验证服务器端应用（SSA）操作、使用 DRA 资源的 Pod 调度以及 kubelet 内存使用情况是否正常。",
+      "**关注 kubeadm**：如果您使用 kubeadm 管理集群，本次升级修复了多个 etcd 管理和节点加入的稳定性问题，升级后相关操作应更加可靠。",
+      "**无需等待**：由于此版本主要修复严重回归，风险较低，收益明确，无需等待后续版本。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。此版本专门针对 v1.36 中引入的回归问题进行修复，属于高优先级补丁。升级风险主要来自修复本身可能引入新问题的极低概率，但鉴于修复问题的严重性（内存泄漏、调度器 panic），升级收益远大于风险。建议在下一个维护窗口内进行升级。需要特别关注升级后 SSA 操作和 DRA 资源调度的行为是否符合预期。"
+  },
+  "statistics": {
+    "analyzed_prs": 10,
+    "analyzed_issues": 0,
+    "important_items": 10
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#138493: Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139808: Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "reason": "Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139910: Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#139965: [1.36] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#140066: Automated cherry pick of #139850: kubelet startPodSync: reuse the previous context to fix memory leak regression",
+      "reason": "Contains 'memory leak'; Contains 'regression'; Has label 'kind/bug'; Has label 'kind/regression'"
+    },
+    {
+      "type": "PR",
+      "title": "#140296: Manual cherry-pick of # 140294: Revert SMD #306 to fix regression in SSA for nullable container types",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Has label 'sig/api-machinery'; Has label 'kind/regression'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#140322: Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#140663: Automated cherry pick of #140431: DRA: roll back reserved state in allocateDevice",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#140581: [release-1.36] Bump images and versions to golang 1.26.5 and update distroless-iptables",
+      "reason": "Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#139681: Automated cherry pick of #139651: Align DeviceTaintRule informer API version with handlers",
+      "reason": "Contains 'panic'; Has label 'kind/bug'; Potential crash issue; Performance related"
+    }
+  ],
+  "prs": {
+    "138493": {
+      "title": "Automated cherry pick of #138390: kubeadm: skip promote call when etcd member is already a voting member",
+      "url": "https://github.com/kubernetes/kubernetes/pull/138493",
+      "body": "Cherry pick of #138390 on release-1.36.\n\n#138390: kubeadm: skip promote call when etcd member is already a voting member\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n```release-note\nkubeadm: fix MemberPromote to skip the etcd promote API call when the member is already a voting member, avoiding unnecessary retries and timeout.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-04-21T02:32:00Z",
+      "merged_at": "2026-07-03T15:30:19Z",
+      "author": "wgkingk",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139808": {
+      "title": "Automated cherry pick of #139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139808",
+      "body": "Cherry pick of #139667 on release-1.36.\r\n\r\n#139667: fix(kubeadm): use KubernetesAPICallTimeout for mandatory kubeadm-config fetch during join\r\n\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n\r\n/kind bug\r\n/sig cluster-lifecycle\r\n/area kubeadm\r\n\r\n```release-note\r\nkubeadm: during \"kubeadm join\", use the KubernetesAPICall timeout\r\n(default 1 minute) when fetching the kubeadm-config ConfigMap, instead\r\nof the short 350ms retry used for optional component configs. A new\r\nshortConfigMapGet parameter is added to FetchInitConfigurationFromCluster\r\nso that callers like \"kubeadm reset\" can still use the short retry.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-17T09:41:53Z",
+      "merged_at": "2026-06-17T15:48:43Z",
+      "author": "damdo",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "139910": {
+      "title": "Automated cherry pick of #139842: kubeadm: treat already promoted learner as successful",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139910",
+      "body": "Cherry pick of #139842 on release-1.36.\n\n#139842: kubeadm: treat already promoted learner as successful\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: Improved resilience of kubeadm etcd learner promotion. kubeadm now correctly handles cases where learner promotion succeeds on the etcd side but a transient client-side error is returned, preventing unnecessary etcd-join failures.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-22T12:27:18Z",
+      "merged_at": "2026-07-03T11:32:28Z",
+      "author": "jihyun-huh",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "triage/accepted"
+      ]
+    },
+    "139965": {
+      "title": "[1.36] Automated cherry pick of #139964: Restore string JSON encoding of cri-api KeyValue",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139965",
+      "body": "Cherry pick of #139964 on release-1.36.\n\n#139964: Restore string JSON encoding of cri-api KeyValue\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\ncri-api: Reverts to pre-1.34 JSON encoding of the KeyValue value field\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-23T17:49:07Z",
+      "merged_at": "2026-07-01T01:00:17Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "kind/regression",
+        "triage/accepted"
+      ]
+    },
+    "140066": {
+      "title": "Automated cherry pick of #139850: kubelet startPodSync: reuse the previous context to fix memory leak regression",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140066",
+      "body": "Cherry pick of #139850 on release-1.36.\n\n#139850: kubelet startPodSync: reuse the previous context to fix memory leak regression\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind regression\n\n\n```release-note\nFixed a kubelet memory leak regression in 1.36 caused by leaked contexts on every Pod sync.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-29T00:03:53Z",
+      "merged_at": "2026-07-03T13:20:42Z",
+      "author": "compumike",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "kind/regression",
+        "needs-triage"
+      ]
+    },
+    "140296": {
+      "title": "Manual cherry-pick of # 140294: Revert SMD #306 to fix regression in SSA for nullable container types",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140296",
+      "body": "#### What type of PR is this?\r\n\r\n/kind bug\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nThis is a targeted backport of https://github.com/kubernetes/kubernetes/pull/140294\r\n\r\nInstead of pulling in the latest structured-merge-diff change, a separate v6.3.3 version was published so that only the revert of https://github.com/kubernetes-sigs/structured-merge-diff/pull/306 is backported.\r\n\r\n\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nFixes a 1.36 regression in server side apply where patching a container type (list or map) could result in `422 required` errors for apply requests that previously succeeded.\r\n```\r\n\r\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-07T23:07:45Z",
+      "merged_at": "2026-07-18T01:15:25Z",
+      "author": "jpbetz",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kubelet",
+        "sig/scheduling",
+        "area/kube-proxy",
+        "area/apiserver",
+        "area/kubectl",
+        "lgtm",
+        "area/cloudprovider",
+        "sig/storage",
+        "sig/node",
+        "sig/api-machinery",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/auth",
+        "approved",
+        "sig/cli",
+        "cncf-cla: yes",
+        "sig/architecture",
+        "area/code-generation",
+        "sig/cloud-provider",
+        "needs-priority",
+        "area/dependency",
+        "kind/regression",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "140322": {
+      "title": "Automated cherry pick of #140163: kubelet: stop logging missing optional container annotations",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140322",
+      "body": "Cherry pick of #140163 on release-1.36.\n\n#140163: kubelet: stop logging missing optional container annotations\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nKubelet no longer emits V(4) \"Label not found\" logs for missing optional container annotations.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-08T14:28:29Z",
+      "merged_at": "2026-07-18T02:09:26Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "140663": {
+      "title": "Automated cherry pick of #140431: DRA: roll back reserved state in allocateDevice",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140663",
+      "body": "Cherry pick of #140431 on release-1.36.\n\n#140431: DRA: roll back reserved state in allocateDevice\n\n/kind bug\n\n#### What this PR does / why we need it\n\nBackports the reserved-state rollback fix to release-1.36. `allocateDevice` reserves a device's shared counters and adds claim constraints before it may reject a candidate on a device taint or a claim constraint, and for an accepted candidate it also marks the device in use and reserves consumable capacity. On release-1.36 some rejection and backtracking paths do not reverse what they did, so a leaked counter reservation makes the allocator treat a counter set as exhausted and leave a schedulable pod pending on a node that could satisfy it.\n\n`DRAConsumableCapacity`, `DRADeviceTaints`, and `DRAPartitionableDevices` are all beta and on by default in 1.36, and the default feature configuration selects the incubating allocator, which is affected, so this is reachable on a default cluster. The fix records what each call mutated in a small `deviceRollbackState` and reverses it with one `rollbackDevice` method on every rejection path and on the backtracking undo, and preserves the shared empty-capacity marker when one share of an allow-multiple device is rolled back while another live share still relies on it.\n\n#### Which issue(s) this PR fixes\n\nBackport of #140431; the master-side fix resolved #140436.\n\n#### Special notes for your reviewer\n\nNot a clean cherry-pick — one conflict, in the shared `allocatortesting` table. #140431's regression cases sit next to #140435's counter-cache cases on master, and #140435's cases are not on release-1.36 (its backport is separate), so the 3-way merge swept them into the conflict. I resolved it by adding only #140431's six cases and leaving #140435's two out. The three production files (`stable`, `incubating`, `experimental`) applied cleanly and their diffs are byte-identical to master; the file set and per-file line counts match the master change exactly. The PR's six commits are squashed into one.\n\nI built release-1.36 with the change and ran the structured allocator tests (`go test ./structured/...`, including `-race` and `-count=10`), all green. All six new cases pass with the change. With the production files reverted to release-1.36 and the tests kept, the four counter-leak cases — `partitionable-devices-taint-releases-counter`, `partitionable-devices-constraint-releases-counter`, `partitionable-consumable-capacity-backtrack-releases-counter`, and `consumable-capacity-rejection-rolls-back-constraints` — fail with wrong-allocation assertions, confirming the counter-rollback fix is exercised and the leak is present on release-1.36. The other two (`partitionable-all-mode-constraint-must-error-with-reserved-counter` and `partitionable-empty-capacity-multiple-share-backtrack-keeps-counter-ownership`) add coverage for the release and rollback paths and do not by themselves fail against a full revert.\n\n#### Does this PR introduce a user-facing change?\n\n```release-note\nFixed DRA scheduling bugs where the structured allocator mis-counted a device's shared counters while exploring candidates: it could keep a counter reserved after rejecting or backtracking a candidate, or drop a shared device's in-use marker so a later share was charged the counter twice. Either way the allocator could treat a counter set as exhausted and leave a pod pending on a node that could satisfy it. This affected the allocator used by the default feature configuration.\n```\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-17T01:15:45Z",
+      "merged_at": "2026-07-18T07:57:31Z",
+      "author": "thc1006",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/XL",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "140581": {
+      "title": "[release-1.36] Bump images and versions to golang 1.26.5 and update distroless-iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140581",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to golang 1.26.5 and update distroless-iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nPart of https://github.com/kubernetes/release/issues/4449\r\n\r\n#### Does this PR introduce a user-facing change?\r\n\r\n```release-note\r\nKubernetes is now built with Go 1.26.5\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/assign @xmudrii @Verolop @saschagrunert \r\n/cc @kubernetes/release-managers ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-15T05:58:53Z",
+      "merged_at": "2026-07-20T11:34:12Z",
+      "author": "palnabarun",
+      "labels": [
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "139681": {
+      "title": "Automated cherry pick of #139651: Align DeviceTaintRule informer API version with handlers",
+      "url": "https://github.com/kubernetes/kubernetes/pull/139681",
+      "body": "Cherry pick of #139651 on release-1.36.\n\n#139651: Align DeviceTaintRule informer API version with handlers\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n/kind failing-test\n\n\n```release-note\nFixed a bug when the DRADeviceTaintRules feature is enabled that caused kube-scheduler to panic when DeviceTaintRules exist and ResourceSlices are changed or to ignore new changes to DeviceTaintRules.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-06-12T16:21:47Z",
+      "merged_at": "2026-07-03T13:20:35Z",
+      "author": "nojnhuh",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "priority/important-longterm",
+        "kind/failing-test",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    }
+  },
+  "issues": {}
+}
