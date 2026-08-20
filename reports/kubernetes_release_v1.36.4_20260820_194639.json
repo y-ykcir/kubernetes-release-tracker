@@ -1,0 +1,218 @@
+{
+  "metadata": {
+    "generated_at": "2026-08-20T19:46:58.195232",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.36.4",
+    "name": "v1.36.4",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.36.md) for more details.\n\n\n\n",
+    "published_at": "2026-08-20T11:48:16Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.36.4",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.36.4 是一个重要的补丁版本，主要修复了设备分配（DRA）、调度抢占和 client-go 测试工具中的关键 Bug，并包含了重要的 Golang 安全依赖更新。",
+    "key_changes": [
+      "修复 DRA 结构化分配器计数器缓存键问题，避免不同驱动间池名冲突导致的设备分配错误 - [PR #140504](https://github.com/kubernetes/kubernetes/pull/140504)",
+      "修复调度器抢占逻辑中的竞态条件，防止抢占者 Pod 卡在不可调度队列中 - [PR #140685](https://github.com/kubernetes/kubernetes/pull/140685)",
+      "修复 kubelet/DRA 在重试 PrepareResources 时可能传递重复 CDI 设备 ID 导致容器启动失败的问题 - [PR #140955](https://github.com/kubernetes/kubernetes/pull/140955)",
+      "更新 golang.org/x/text 和 golang.org/x/net 依赖以包含安全修复 - [PR #141226](https://github.com/kubernetes/kubernetes/pull/141226)"
+    ],
+    "important_bugfixes": [
+      "修复 DRA 计数器缓存键问题：当两个设备驱动在同一节点上发布同名池时，会导致设备被错误地接受或拒绝。**影响：** 使用 DRA（Device Resource Access）功能且部署了多个设备驱动的集群，设备分配可能不可靠。 - [PR #140504](https://github.com/kubernetes/kubernetes/pull/140504)",
+      "修复调度器抢占竞态条件：可能导致高优先级 Pod（抢占者）在抢占成功后仍被错误地留在不可调度队列中，无法被调度。**影响：** 依赖抢占机制来保证关键工作负载调度的集群，可能出现 Pod 调度延迟或失败。 - [PR #140685](https://github.com/kubernetes/kubernetes/pull/140685)",
+      "修复 DRA 设备 ID 重复问题：在部分失败的 PrepareResources 调用重试时，kubelet 可能向 CRI 运行时传递重复的 CDI 设备 ID。**影响：** 使用 DRA 且设备准备可能部分失败的场景，容器启动会失败。 - [PR #140955](https://github.com/kubernetes/kubernetes/pull/140955)",
+      "修复 client-go 的 FakeCustomStore 测试工具：使其重新符合 cache.Store 接口规范。**影响：** 主要影响使用 FakeCustomStore 进行单元测试的开发者，测试可能因接口方法缺失而失败。 - [PR #141001](https://github.com/kubernetes/kubernetes/pull/141001)"
+    ],
+    "security_issues": [
+      "更新 golang.org/x/text 依赖以修复漏洞 GO-2026-5970 - [PR #141226](https://github.com/kubernetes/kubernetes/pull/141226) - **风险级别：** 中（依赖项安全更新）",
+      "更新 golang.org/x/net 依赖以修复漏洞 GO-2026-5026 - [PR #141226](https://github.com/kubernetes/kubernetes/pull/141226) - **风险级别：** 中（依赖项安全更新）"
+    ],
+    "performance_improvements": [],
+    "breaking_changes": [
+      "此版本为补丁版本，未引入破坏性变更或 API 变更。所有修复均为向后兼容的 Bug 修复和安全更新。"
+    ],
+    "recommendations": [
+      "**强烈建议**所有运行 Kubernetes 1.36.x 版本的集群升级到 v1.36.4，特别是那些使用了 DRA 设备管理功能或对调度抢占可靠性有要求的集群。",
+      "升级前，请在测试环境中验证 DRA 设备驱动和调度器行为是否正常。",
+      "对于开发者，如果单元测试因 `FakeCustomStore` 相关问题失败，升级到此版本后应能解决。",
+      "虽然此版本包含安全依赖更新，但仍建议结合自身安全策略评估是否需要更紧急的升级。"
+    ],
+    "risk_assessment": "整体风险评估：**低风险**。这是一个专注于修复已知 Bug 和安全更新的补丁版本，升级引入新问题的可能性较低。建议的升级时机：下一个维护窗口。需要特别关注的方面：升级后观察 DRA 设备分配和 Pod 调度行为是否正常，尤其是涉及抢占的场景。"
+  },
+  "statistics": {
+    "analyzed_prs": 5,
+    "analyzed_issues": 0,
+    "important_items": 5
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#140504: Automated cherry pick of #140435: DRA: key the structured allocator counter caches by PoolID",
+      "reason": "Contains 'regression'; Has label 'kind/bug'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#140685: Automated cherry pick of #139162: Fix case where preemptor may be stuck in unschedulable queue\n#139330: Unset WasFlushedFromUnschedulable for gated pods\n#139331: Make sure gated pods are flushed with the same frequency as non-gated",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#140955: Automated cherry pick of #140274: kubelet/dra: reset devices before processing gRPC response",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#141001: Automated cherry pick of #140966: client-go: restore FakeCustomStore conformance to cache.Store",
+      "reason": "Has label 'kind/bug'; Has label 'sig/api-machinery'"
+    },
+    {
+      "type": "PR",
+      "title": "#141226: Update golang.org/x deps",
+      "reason": "Contains 'security'; Has label 'kind/bug'; Has label 'sig/api-machinery'; Has label 'sig/security'"
+    }
+  ],
+  "prs": {
+    "140504": {
+      "title": "Automated cherry pick of #140435: DRA: key the structured allocator counter caches by PoolID",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140504",
+      "body": "Cherry pick of #140435 on release-1.36.\n\n#140435: DRA: key the structured allocator counter caches by PoolID\n\n/kind bug\n\n#### What this PR does / why we need it\nBackports the counter-cache keying fix to release-1.36. `DRAPartitionableDevices` is beta and on by default in 1.36, and there the allocator keys its `availableCounters`/`consumedCounters` caches by pool name. Two drivers publishing a pool with the same name on one node then share each other's counter definitions, so a device in the second driver's pool can be incorrectly accepted or rejected. Keying the caches by `PoolID` (driver plus pool name) fixes it.\n\n#### Which issue(s) this PR fixes\nBackport of #140435; the master-side fix resolved #140434.\n\n#### Special notes for your reviewer\nClean cherry-pick, no conflicts. I built release-1.36 with the change and ran the structured allocator tests: the two regression cases (`partitionable-devices-counter-cache-scoped-by-pool-ID` and `partitionable-devices-counter-cache-not-crossed-between-driver-schemas`) fail on current release-1.36 and pass with the change.\n\n#### Does this PR introduce a user-facing change?\n```release-note\nFixed a DRA scheduling bug where the structured allocator keyed its shared-counter caches by pool name alone, so two drivers publishing a pool with the same name on a node could use each other's counter definitions and incorrectly accept or reject device allocations in the second driver's pool.\n```\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-13T19:50:54Z",
+      "merged_at": "2026-08-08T01:01:56Z",
+      "author": "thc1006",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "140685": {
+      "title": "Automated cherry pick of #139162: Fix case where preemptor may be stuck in unschedulable queue\n#139330: Unset WasFlushedFromUnschedulable for gated pods\n#139331: Make sure gated pods are flushed with the same frequency as non-gated",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140685",
+      "body": "Cherry pick of #139162 #139330 #139331 on release-1.36.\n\n#139162: Fix case where preemptor may be stuck in unschedulable queue\n#139330: Unset WasFlushedFromUnschedulable for gated pods\n#139331: Make sure gated pods are flushed with the same frequency as non-gated\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a race condition in preemption, where a preemptor pod could get stuck in unschedulable state.\r\nNONE\r\nNONE\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-17T14:10:00Z",
+      "merged_at": "2026-08-08T01:02:05Z",
+      "author": "iomarsayed",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "sig/scheduling",
+        "lgtm",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "140955": {
+      "title": "Automated cherry pick of #140274: kubelet/dra: reset devices before processing gRPC response",
+      "url": "https://github.com/kubernetes/kubernetes/pull/140955",
+      "body": "Cherry pick of #140274 on release-1.36.\n\n#140274: kubelet/dra: reset devices before processing gRPC response\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubelet/DRA: fixed a bug where retrying a partially-failed PrepareResources caused duplicate CDI device IDs to be passed to the CRI runtime, which could cause container start to fail.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-27T08:09:59Z",
+      "merged_at": "2026-08-08T01:02:13Z",
+      "author": "bart0sh",
+      "labels": [
+        "kind/bug",
+        "area/kubelet",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "141001": {
+      "title": "Automated cherry pick of #140966: client-go: restore FakeCustomStore conformance to cache.Store",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141001",
+      "body": "Cherry pick of #140966 on release-1.36.\n\n#140966: client-go: restore FakeCustomStore conformance to cache.Store\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nclient-go: FakeCustomStore implements the Bookmark and LastStoreSyncResourceVersion methods added to the cache.Store interface in v0.36, so it satisfies cache.Store again\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-07-28T18:59:47Z",
+      "merged_at": "2026-07-31T17:07:42Z",
+      "author": "alancaldelas",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/api-machinery",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "141226": {
+      "title": "Update golang.org/x deps",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141226",
+      "body": "Update to golang.org/x/text@v0.39.0+ for https://pkg.go.dev/vuln/GO-2026-5970\r\n\r\nUpdate to golang.org/x/net@v0.55.0+ for https://pkg.go.dev/vuln/GO-2026-5026\r\n\r\n/kind bug\r\n/sig architecture security\r\n\r\n```release-note\r\nUpdate golang.org/x/text and golang.org/x/net dependencies to include security updates\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-08-06T15:45:53Z",
+      "merged_at": "2026-08-08T01:02:22Z",
+      "author": "liggitt",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "sig/network",
+        "area/kubelet",
+        "sig/scheduling",
+        "area/kube-proxy",
+        "area/apiserver",
+        "area/kubectl",
+        "lgtm",
+        "area/cloudprovider",
+        "sig/storage",
+        "sig/node",
+        "sig/api-machinery",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "sig/auth",
+        "approved",
+        "sig/cli",
+        "cncf-cla: yes",
+        "sig/instrumentation",
+        "sig/architecture",
+        "area/code-generation",
+        "sig/cloud-provider",
+        "area/dependency",
+        "sig/security",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    }
+  },
+  "issues": {}
+}
