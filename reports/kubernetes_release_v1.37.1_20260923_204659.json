@@ -1,0 +1,258 @@
+{
+  "metadata": {
+    "generated_at": "2026-09-23T20:47:35.757820",
+    "tool": "containerd-release-tracker",
+    "version": "1.0.0"
+  },
+  "release": {
+    "tag_name": "v1.37.1",
+    "name": "v1.37.1",
+    "body": "\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.37.md).\n\nSee the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.37.md) for more details.\n\n\n\n",
+    "published_at": "2026-09-23T19:13:17Z",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/kubernetes/kubernetes/releases/tag/v1.37.1",
+    "author": "k8s-release-robot"
+  },
+  "analysis": {
+    "summary": "Kubernetes v1.37.1 是一个补丁版本，主要修复了 Windows kube-proxy 的 panic、DRA（动态资源分配）的整数溢出崩溃、设备污点选择器逻辑错误等关键 Bug，并升级了 Go 版本以包含安全修复。",
+    "key_changes": [
+      "修复 Windows kube-proxy (winkernel) 因枚举无端口映射的 HNS 负载均衡器而导致的 panic - [PR #141681](https://github.com/kubernetes/kubernetes/pull/141681)",
+      "修复 DRA 结构化分配器中 per-claim 设备数量检查的整数溢出问题，该问题可导致 kubelet 崩溃或设备分配错误 - [PR #141922](https://github.com/kubernetes/kubernetes/pull/141922) / [Issue #141323](https://github.com/kubernetes/kubernetes/issues/141323)",
+      "修复 DRA 中 `DeviceTaintSelector` 为 `nil` 时错误匹配所有设备的问题，该问题曾导致所有 DRA 设备不可调度 - [PR #141998](https://github.com/kubernetes/kubernetes/pull/141998)",
+      "kubeadm 不再将节点特定的 systemd-resolved `resolvConf` 路径泄露到集群范围的 kubelet-config ConfigMap 中 - [PR #141627](https://github.com/kubernetes/kubernetes/pull/141627)",
+      "将构建基础升级至 Go 1.26.8 和更新的 distroless iptables 镜像 - [PR #142179](https://github.com/kubernetes/kubernetes/pull/142179)"
+    ],
+    "important_bugfixes": [
+      "修复 Windows kube-proxy panic：当 Windows HNS 负载均衡器没有端口映射时，枚举操作会导致 kube-proxy 进程崩溃，中断节点上的服务代理。 - [PR #141681](https://github.com/kubernetes/kubernetes/pull/141681) - **影响：** 运行在 Windows 节点上的 kube-proxy 可能意外终止，导致该节点上的 Service 网络功能失效。",
+      "修复 DRA 整数溢出崩溃：在特定的大数值设备请求下，DRA 分配器中的整数计算会溢出，可能导致 kubelet panic 或分配出错误数量的设备。 - [PR #141922](https://github.com/kubernetes/kubernetes/pull/141922) - **影响：** 使用 DRA 功能管理 GPU、FPGA 等设备的集群，在极端请求下可能面临 kubelet 不稳定或设备分配错误的风险。",
+      "修复 DRA 设备污点选择器逻辑：当 `DeviceTaintRule` 的 `spec.deviceSelector` 为 `nil` 时，错误地匹配了集群中的所有设备，导致所有 DRA 设备被施加污点而无法调度。 - [PR #141998](https://github.com/kubernetes/kubernetes/pull/141998) - **影响：** 配置了 DRA 设备污点但未明确指定选择器的集群，所有相关设备会变得不可调度，影响工作负载部署。",
+      "修复 kubeadm 配置泄露：`kubeadm init` 时会将主机特定的 resolv.conf 路径（如 `/run/systemd/resolve/resolv.conf`）持久化到集群全局的 `kubelet-config` ConfigMap，可能影响其他节点。 - [PR #141627](https://github.com/kubernetes/kubernetes/pull/141627) - **影响：** 在混合或后续加入的节点上，如果 resolv.conf 路径不同，可能导致 kubelet DNS 解析配置错误。"
+    ],
+    "security_issues": [
+      "基础组件安全更新：将构建工具链升级至 Go 1.26.8。Go 的次要版本更新通常包含对运行时和标准库的安全修复。 - [PR #142179](https://github.com/kubernetes/kubernetes/pull/142179) - **风险级别：** 中。建议升级以获取最新的安全补丁，降低潜在的语言运行时漏洞风险。"
+    ],
+    "performance_improvements": [
+      "DRA 整数溢出修复：防止因整数溢出导致的异常内存分配或逻辑错误，提升了 DRA 组件在处理极端请求时的稳定性和可预测性。 - [PR #141922](https://github.com/kubernetes/kubernetes/pull/141922) - **提升：** 避免了因崩溃导致的性能中断和资源分配错误。",
+      "基础镜像更新：使用更新的 distroless iptables 镜像，可能包含更小的攻击面和优化的基础库。 - [PR #142179](https://github.com/kubernetes/kubernetes/pull/142179) - **提升：** 镜像安全性和潜在的内存占用优化。"
+    ],
+    "breaking_changes": [
+      "DRA DeviceTaintSelector 行为变更：修复后，`spec.deviceSelector` 为 `nil` 或未设置的 `DeviceTaintRule` 将不再匹配任何设备（修复前错误地匹配所有设备）。如果需要匹配所有设备，必须显式设置 `deviceSelector: {}`。 - [PR #141998](https://github.com/kubernetes/kubernetes/pull/141998) - **影响：** 任何依赖 `nil` 选择器来为所有设备添加污点的配置将失效。需要检查并更新 DRA DeviceTaintRule 配置，确保选择器意图明确。"
+    ],
+    "recommendations": [
+      "**立即升级建议**：如果您的集群运行在 Windows 节点上并使用了 `kube-proxy`，或者正在使用或计划使用 DRA（动态资源分配）功能，建议尽快安排升级到 v1.37.1，以修复可能导致服务中断的崩溃 Bug。",
+      "**配置检查**：升级后，请检查集群中所有 DRA 相关的 `DeviceTaintRule` 配置。如果之前依赖未设置 `deviceSelector` 来针对所有设备，必须将其修改为显式的 `deviceSelector: {}`，否则污点规则将不会生效。",
+      "**测试验证**：在测试环境中，重点验证 Windows 节点的 Service 连通性以及 DRA 设备的申请、调度和污点功能是否正常。",
+      "**关注 Go 版本**：此次 Go 版本升级为常规安全维护，建议关注后续是否有与 Go 1.26.8 相关的安全公告。"
+    ],
+    "risk_assessment": "整体风险评估：**中低风险**。此版本主要为 Bug 修复版本，未引入新的 API 或功能，核心变更在于修复已知的稳定性问题。对于大多数未使用 Windows 节点或 DRA 功能的集群，升级风险较低。对于受影响的集群，修复的问题（如 kube-proxy panic、DRA 崩溃）本身带来的风险高于升级风险。**建议升级时机**：受影响的集群应尽快在维护窗口内升级；其他集群可按常规补丁周期升级。**需要特别关注的方面**：1) Windows 节点 kube-proxy 的稳定性；2) DRA 设备分配和污点规则的配置是否正确迁移；3) 升级后对相关功能进行冒烟测试。"
+  },
+  "statistics": {
+    "analyzed_prs": 6,
+    "analyzed_issues": 1,
+    "important_items": 7
+  },
+  "important_items": [
+    {
+      "type": "PR",
+      "title": "#141627: Automated cherry pick of #141337: Avoid leaking node-specific kubelet config into the ConfigMap",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#141681: Automated cherry pick of #141489: [kube-proxy/winkernel] Guard against load balancers without port mappings",
+      "reason": "Contains 'panic'; Has label 'kind/bug'; Potential crash issue"
+    },
+    {
+      "type": "PR",
+      "title": "#141922: Automated cherry pick of #141307: DRA: avoid integer overflow in per-claim device-limit checks",
+      "reason": "Contains 'panic'; Contains 'crash'; Has label 'kind/bug'; Potential crash issue; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#141998: Automated cherry pick of #141648: fix: make nil DeviceTaintSelector match no devices (tracker)",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "PR",
+      "title": "#142179: [release-1.37] Bump images and versions to go 1.26.8 and distroless iptables",
+      "reason": "Has label 'priority/critical-urgent'; Performance related"
+    },
+    {
+      "type": "PR",
+      "title": "#141780: Cherry pick of #141756: e2e auth: use unprivileged container port in projected podcertificate test",
+      "reason": "Has label 'kind/bug'"
+    },
+    {
+      "type": "Issue",
+      "title": "#141323: DRA structured allocator overflows the native-int device-count sum in the per-claim limit check",
+      "reason": "Has label 'kind/bug'"
+    }
+  ],
+  "prs": {
+    "141627": {
+      "title": "Automated cherry pick of #141337: Avoid leaking node-specific kubelet config into the ConfigMap",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141627",
+      "body": "Cherry pick of #141337 on release-1.37.\n\n#141337: Avoid leaking node-specific kubelet config into the ConfigMap\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nkubeadm: no longer persists a node-specific systemd-resolved resolvConf path in the cluster-wide kubelet-config ConfigMap during init.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-08-27T15:05:00Z",
+      "merged_at": "2026-09-12T04:59:11Z",
+      "author": "HirazawaUi",
+      "labels": [
+        "kind/bug",
+        "priority/backlog",
+        "lgtm",
+        "sig/cluster-lifecycle",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "area/kubeadm",
+        "cncf-cla: yes",
+        "triage/accepted"
+      ]
+    },
+    "141681": {
+      "title": "Automated cherry pick of #141489: [kube-proxy/winkernel] Guard against load balancers without port mappings",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141681",
+      "body": "Cherry pick of #141489 on release-1.37.\n\n#141489: [kube-proxy/winkernel] Guard against load balancers without port mappings\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a panic in the Windows kube-proxy (winkernel) that could terminate kube-proxy when\nan HNS load balancer without port mappings was enumerated.\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-08-29T17:48:35Z",
+      "merged_at": "2026-09-12T03:19:11Z",
+      "author": "prince-melvin",
+      "labels": [
+        "kind/bug",
+        "sig/network",
+        "area/kube-proxy",
+        "lgtm",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "sig/windows",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    },
+    "141922": {
+      "title": "Automated cherry pick of #141307: DRA: avoid integer overflow in per-claim device-limit checks",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141922",
+      "body": "Cherry pick of #141307 on release-1.37.\n\n#141307: DRA: avoid integer overflow in per-claim device-limit checks\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n#### What this PR does / why we need it\nBackports the per-claim device-limit overflow fix. The pre-flight loop in `Allocate` sums each request's device count into `minDevicesPerClaim` as a native `int`, and `allocateOne` builds `len(results) + numDevices - deviceIndex` the same way. Two `ExactCount` requests of `math.MaxInt/2 + 1` wrap the sum negative, so the `> AllocationResultsMaxSize` check is false and the negative total goes on to size the result slice.\n\nReaching it takes no feature gate. `DeviceRequest.Count` is validated only as `> 0`, and all three allocator variants on this branch carry the unguarded arithmetic, so whichever one a feature configuration selects is affected.\n\n#### Which issue(s) this PR fixes\nBackport of #141307, which fixes #141323 on master. pohly asked for the cherry pick there, then reopened #141323 with the condition that it stays open until 1.34 through 1.37 all carry the fix. The full set is #141922 for release-1.37, #141923 for release-1.36, #141924 for release-1.35 and #141925 for release-1.34.\n\n#### Special notes for your reviewer\nClean cherry-pick, no conflicts. The diff is identical to the master change apart from the blob hashes: same four files, same per-file line counts, and the whole patch matches line for line including the hunk offsets.\n\nI built release-1.37 with the change and ran `go test ./staging/src/k8s.io/dynamic-resource-allocation/structured/...`, all green.\n\nReverting the three production files and keeping the tests, on this branch:\n\n```\n--- FAIL: TestAllocator (0.01s)\n    --- FAIL: TestAllocator/exact-count-total-overflows-claim-limit (0.00s)\n        allocator_incubating.go:167: I0908 12:02:16.979629] Starting allocation numClaims=1 numSlicesForNode=0\n        allocator_incubating.go:178: I0908 12:02:16.980185] Gathered pool information pools={\"content\":[],\"count\":0,\"devices\":null}\n        allocator_incubating.go:267: I0908 12:02:16.980244] Checked claim claim=\"claim-0\" minDevices=-9223372036854775808\n        allocator_incubating.go:169: I0908 12:02:16.980268] Done with allocation success=false err=null\npanic: runtime error: makeslice: cap out of range [recovered, repanicked]\n```\n\nThe stack is trimmed there; the frame is `incubating.(*Allocator).Allocate` at `allocator_incubating.go:277`. `minDevices=-9223372036854775808` is the wrapped sum. The stable and experimental variants panic the same way.\n\n#### Does this PR introduce a user-facing change?\n\n```release-note\nkube-scheduler: a ResourceClaim whose device request counts add up past the int range no longer crashes the scheduler or skips the `firstAvailable` fallback in the DRA allocator. A request over the per-claim device limit is rejected with an error naming it, and an oversized `firstAvailable` alternative falls through to a smaller one.\n```\n\n",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-09-08T02:19:06Z",
+      "merged_at": "2026-09-12T04:59:19Z",
+      "author": "thc1006",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/L",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "141998": {
+      "title": "Automated cherry pick of #141648: fix: make nil DeviceTaintSelector match no devices (tracker)",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141998",
+      "body": "Cherry pick of #141648 on release-1.37.\n\n#141648: fix: make nil DeviceTaintSelector match no devices (tracker)\n\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\n\n#### What type of PR is this?\n/kind bug\n\n\n```release-note\nFixed a bug where a DeviceTaintRule with no `spec.deviceSelector` incorrectly matched every device cluster-wide and made all DRA devices unschedulable for `NoSchedule` or `NoExecute` taints. The rule now correctly matches no devices as documented. Use an explicit empty selector (`deviceSelector: {}`) to target all devices.\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-09-10T07:22:30Z",
+      "merged_at": "2026-09-11T20:13:12Z",
+      "author": "marwan562",
+      "labels": [
+        "kind/bug",
+        "lgtm",
+        "sig/node",
+        "release-note",
+        "size/M",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage",
+        "wg/device-management"
+      ]
+    },
+    "142179": {
+      "title": "[release-1.37] Bump images and versions to go 1.26.8 and distroless iptables",
+      "url": "https://github.com/kubernetes/kubernetes/pull/142179",
+      "body": "#### What type of PR is this?\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nBump images and versions to go 1.26.8 and distroless iptables\r\n\r\n#### Which issue(s) this PR is related to:\r\n\r\nxref https://github.com/kubernetes/release/issues/4520\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nKubernetes is now built using Go 1.26.8\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n```docs\r\n\r\n```\r\n\r\n/assign @Verolop @saschagrunert @dims  \r\ncc @kubernetes/release-engineering ",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-09-17T12:39:08Z",
+      "merged_at": "2026-09-22T05:44:09Z",
+      "author": "cpanato",
+      "labels": [
+        "area/test",
+        "priority/critical-urgent",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "kind/feature",
+        "area/release-eng",
+        "cherry-pick-approved",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "sig/release",
+        "triage/accepted"
+      ]
+    },
+    "141780": {
+      "title": "Cherry pick of #141756: e2e auth: use unprivileged container port in projected podcertificate test",
+      "url": "https://github.com/kubernetes/kubernetes/pull/141780",
+      "body": "Cherry pick of #141756 on release-1.37.\r\n#141756: e2e auth: use unprivileged container port in projected podcertificate test\r\nFor details on the cherry pick process, see the [cherry pick requests](https://git.k8s.io/community/contributors/devel/sig-release/cherry-picks.md) page.\r\n#### What type of PR is this?\r\n/kind bug\r\n/kind failing-test\r\n```release-note\r\nAdjust the Projected PodCertificate e2e conformance test added in 1.37 to be able to run in unprivileged environments\r\n```",
+      "state": "closed",
+      "merged": true,
+      "created_at": "2026-09-02T03:28:58Z",
+      "merged_at": "2026-09-11T21:49:14Z",
+      "author": "yt2985",
+      "labels": [
+        "kind/bug",
+        "area/test",
+        "lgtm",
+        "release-note",
+        "size/S",
+        "cherry-pick-approved",
+        "sig/auth",
+        "approved",
+        "cncf-cla: yes",
+        "sig/testing",
+        "kind/failing-test",
+        "ok-to-test",
+        "needs-priority",
+        "needs-triage"
+      ]
+    }
+  },
+  "issues": {
+    "141323": {
+      "title": "DRA structured allocator overflows the native-int device-count sum in the per-claim limit check",
+      "url": "https://github.com/kubernetes/kubernetes/issues/141323",
+      "body": "### What happened\n\nThe structured allocator adds device counts in native `int` before comparing to `resourceapi.AllocationResultsMaxSize`. `allocateOne` forms `len(results) + requestData.numDevices - r.deviceIndex`, and the pre-flight `Allocate` loop accumulates `minDevicesPerClaim += numDevices`. `DeviceRequest.Count` is validated only as `> 0`, never against the result limit, so several large-but-valid counts sum past the limit and wrap. Two counts of `math.MaxInt/2 + 1` wrap to a negative total, so `total > MaxSize` is false and the check is skipped; four wrap back near zero. A `FirstAvailable` request whose first alternative carries a huge count, sitting behind a device already allocated for the claim, drives the overflowing subtraction and misdirects the backtracking rather than pruning the oversized alternative.\n\n### What you expected to happen\n\nEach request is refused against the remaining capacity before the sum is formed, so no addition overflows and an oversized count is rejected with `number of requested devices exceeds the claim limit`.\n\n### How to reproduce it\n\nA single claim with two `ExactCount` requests of `math.MaxInt/2 + 1` each: the total overflows negative and is admitted today. A `FirstAvailable` request with a first subrequest of `math.MaxInt` behind one already-allocated device: the oversized alternative should be pruned and the small one taken. Both are covered by the tests in #141307, and the fix is applied identically across the stable, incubating, and experimental tiers.\n\n### Anything else we need to know\n\n`math.MaxInt` makes the counts overflow on 32-bit builds as well. This is worth a backport decision for the release branches that already carry the per-claim result-limit check.\n\n### Related\n\nThis is the concrete in-tree instance behind #140424, which asks for an upper bound or overflow-safety contract on `DeviceRequest.Count`. #140424 observes that the structured allocator guards the single-count path; the gap here is the multi-count sum on that same path, one large count plus the devices already allocated for the claim, which was not guarded until #141307.\n\n/kind bug\n/sig node\n/wg device-management\n\n_This issue was written in part with the assistance of generative AI. I checked the allocator paths and the overflow cases against the code and the tests myself._\n",
+      "state": "closed",
+      "created_at": "2026-08-11T18:10:02Z",
+      "closed_at": "2026-09-12T05:37:20Z",
+      "author": "thc1006",
+      "labels": [
+        "kind/bug",
+        "priority/important-soon",
+        "sig/node",
+        "triage/accepted",
+        "wg/device-management"
+      ]
+    }
+  }
+}
